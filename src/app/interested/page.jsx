@@ -1,4 +1,6 @@
 import Interested from "@/pages/InterestedPage";
+export const dynamic = "force-dynamic";
+
 
 export const metadata = {
   title: "Build Your Custom Research Platform | Express Your Interest",
