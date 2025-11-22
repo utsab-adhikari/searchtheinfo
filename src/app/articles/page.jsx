@@ -1,5 +1,4 @@
 import ArticlesPage from "@/pages/Articles";
-export const dynamic = "force-dynamic";
 
 
 export const metadata = {

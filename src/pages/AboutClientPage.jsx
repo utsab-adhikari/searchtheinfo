@@ -1,5 +1,5 @@
 "use client";
-import Header from "@/components/Header";
+import Header from "@/components/Header02";
 import Link from "next/link";
 import { FaGithub, FaFacebook, FaGlobe, FaWhatsapp, FaEnvelope } from "react-icons/fa";
 import { HiOutlineMail } from "react-icons/hi";

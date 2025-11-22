@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { FaCalendarAlt, FaTags } from "react-icons/fa";
-import Header from "@/components/Header";
+import Header from "@/components/Header02";
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState([]);

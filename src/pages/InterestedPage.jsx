@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
+import Header from "@/components/Header02";
 
 export default function Interested() {
   const [form, setForm] = useState({

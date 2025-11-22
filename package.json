@@ -1,6 +1,6 @@
 {
   "name": "Search The Info",
-  "version": "1.0.02",
+  "version": "1.0.03",
   "private": true,
   "scripts": {
     "dev": "next dev",

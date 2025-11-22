@@ -1,5 +1,4 @@
 import AboutClientPage from "@/pages/AboutClientPage";
-export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "About – SearchTheInfo",
