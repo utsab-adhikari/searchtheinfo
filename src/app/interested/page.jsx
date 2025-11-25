@@ -24,7 +24,7 @@ export const metadata = {
     siteName: "Utsab Adhikari Projects",
     images: [
       {
-        url: "https://projects.utsabadhikari.me/og/interested.png",
+        url: "https://projects.utsabadhikari.me/og-image.png",
         width: 1200,
         height: 630,
         alt: "Custom Research Platform - Interest Form"
@@ -37,7 +37,7 @@ export const metadata = {
     title: "Build Your Custom Research Platform | Express Your Interest",
     description:
       "Fill out the interest form to get a tailored, secure, scalable research or academic platform.",
-    images: ["https://projects.utsabadhikari.me/og/interested.png"],
+    images: ["https://projects.utsabadhikari.me/og-image.png"],
   },
   alternates: {
     canonical: "https://projects.utsabadhikari.me/interested",

@@ -18,7 +18,7 @@ export const metadata = {
     siteName: "SearchTheInfo",
     images: [
       {
-        url: "https://searchtheinfo.utsabadhikari.me/og-about.png",
+        url: "https://searchtheinfo.utsabadhikari.me/og-image.png",
         width: 1200,
         height: 630,
         alt: "About SearchTheInfo",
@@ -32,7 +32,7 @@ export const metadata = {
     title: "About – SearchTheInfo",
     description:
       "Learn about the vision behind SearchTheInfo and connect with the creator, Utsab Adhikari.",
-    images: ["https://searchtheinfo.utsabadhikari.me/og-about.png"],
+    images: ["https://searchtheinfo.utsabadhikari.me/og-image.png"],
     creator: "@utsabadhikari",
   },
 

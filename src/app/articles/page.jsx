@@ -18,7 +18,7 @@ export const metadata = {
     siteName: 'SearchTheInfo',
     images: [
       {
-        url: 'https://searchtheinfo.utsabadhikari.me/og-articles.png',
+        url: 'https://searchtheinfo.utsabadhikari.me/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Latest Articles on SearchTheInfo',
@@ -31,7 +31,7 @@ export const metadata = {
     title: 'Latest Articles – SearchTheInfo',
     description:
       'Curated deep-dive articles on Networking, Programming, AI, and systems. Clear, practical guides for tech enthusiasts.',
-    images: ['https://searchtheinfo.utsabadhikari.me/og-articles.png'],
+    images: ['https://searchtheinfo.utsabadhikari.me/og-image.png'],
     creator: '@utsabadhikari',
   },
   robots: {
