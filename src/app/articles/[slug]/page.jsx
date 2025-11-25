@@ -6,7 +6,7 @@ const getBaseUrl = () => {
 
 async function fetchArticleForMetadata(slug) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const baseUrl = getBaseUrl();
 
     const res = await fetch(`${baseUrl}/api/articles/${slug}`, {
       next: { revalidate: 60 },
@@ -24,7 +24,7 @@ async function fetchArticleForMetadata(slug) {
       excerpt: a.excerpt || a.description,
       tags: a.tags || [],
       slug: a.slug,
-      featuredImage: a.featuredImage.url
+      featuredImage: a.featuredImage
         ? {
             url: a.featuredImage.url,
             title: a.featuredImage.title,
@@ -40,10 +40,12 @@ async function fetchArticleForMetadata(slug) {
 }
 
 export async function generateMetadata({ params }) {
-    const {slug} = await params;
+  const { slug } = await params;
   const article = await fetchArticleForMetadata(slug);
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}/articles/${slug}`;
+  
+  const DEFAULT_OG_IMAGE = `${baseUrl}/og-image.png`;
 
   if (!article) {
     const title = "Article not found | SearchTheInfo";
@@ -53,24 +55,21 @@ export async function generateMetadata({ params }) {
     return {
       title,
       description,
-      alternates: {
-        canonical: url,
-      },
-      robots: {
-        index: false,
-        follow: true,
-      },
+      alternates: { canonical: url },
+      robots: { index: false, follow: true },
       openGraph: {
         title,
         description,
         url,
         siteName: "SearchTheInfo",
         type: "article",
+        images: [{ url: DEFAULT_OG_IMAGE }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
+        images: [DEFAULT_OG_IMAGE],
       },
     };
   }
@@ -89,18 +88,20 @@ export async function generateMetadata({ params }) {
     excerpt ||
     "Deep technical research on networking, programming, AI, and more — explained clearly.";
 
-  const ogImageUrl = featuredImage?.url
-    ? featuredImage.url.startsWith("http")
-      ? featuredImage.url
-      : `${baseUrl}${featuredImage.url}`
-    : `${baseUrl}/og-image.png`; 
+  let ogImageUrl = DEFAULT_OG_IMAGE;
+
+  if (featuredImage?.url) {
+    if (featuredImage.url.startsWith("http")) {
+      ogImageUrl = featuredImage.url;
+    } else {
+      ogImageUrl = `${baseUrl}${featuredImage.url}`;
+    }
+  }
 
   return {
     title: pageTitle,
     description,
-    alternates: {
-      canonical: url,
-    },
+    alternates: { canonical: url },
     keywords: [
       ...(tags || []),
       "networking",
@@ -111,10 +112,7 @@ export async function generateMetadata({ params }) {
       "technical research",
       "SearchTheInfo",
     ],
-    robots: {
-      index: true,
-      follow: true,
-    },
+    robots: { index: true, follow: true },
     openGraph: {
       type: "article",
       title: pageTitle,
@@ -143,6 +141,6 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function Page({ params }) {
-    const {slug} = await params;
+  const { slug } = await params;
   return <ArticleClient slug={slug} />;
 }
