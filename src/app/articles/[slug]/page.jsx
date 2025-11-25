@@ -1,17 +1,14 @@
 import ArticleClient from "./ArticleClient";
 
-// Helper to get base URL on server
 const getBaseUrl = () => {
   return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 };
 
-// Fetch minimal article data for metadata (server-side)
 async function fetchArticleForMetadata(slug) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
     const res = await fetch(`${baseUrl}/api/articles/${slug}`, {
-      // Adjust revalidation as you like
       next: { revalidate: 60 },
     });
 
@@ -48,7 +45,6 @@ export async function generateMetadata({ params }) {
   const baseUrl = getBaseUrl();
   const url = `${baseUrl}/articles/${slug}`;
 
-  // If article not found: 404-like metadata
   if (!article) {
     const title = "Article not found | SearchTheInfo";
     const description =
@@ -97,7 +93,7 @@ export async function generateMetadata({ params }) {
     ? featuredImage.url.startsWith("http")
       ? featuredImage.url
       : `${baseUrl}${featuredImage.url}`
-    : `${baseUrl}/default-og-image.png`; // optional fallback
+    : `${baseUrl}/og-image.png`; 
 
   return {
     title: pageTitle,
