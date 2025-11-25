@@ -24,7 +24,7 @@ async function fetchArticleForMetadata(slug) {
       excerpt: a.excerpt || a.description,
       tags: a.tags || [],
       slug: a.slug,
-      featuredImage: a.featuredImage
+      featuredImage: a.featuredImage.url
         ? {
             url: a.featuredImage.url,
             title: a.featuredImage.title,
