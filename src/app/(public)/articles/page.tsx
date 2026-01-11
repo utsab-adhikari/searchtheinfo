@@ -151,7 +151,7 @@ export default function Articles() {
                       {article.title}
                     </h3>
 
-                    <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 flex-grow">
+                    <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 flex-grow line-clamp-3">
                       {article.excerpt ||
                         "No excerpt available for this article."}
                     </p>

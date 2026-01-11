@@ -320,10 +320,10 @@ export default function Interested() {
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
                 >
                   <option value="">Select budget range</option>
-                  <option value="basic">Basic Setup ($500-$1,000)</option>
-                  <option value="standard">Standard Platform ($1,000-$2,500)</option>
-                  <option value="premium">Premium Custom ($2,500-$5,000)</option>
-                  <option value="enterprise">Enterprise Solution ($5,000+)</option>
+                  <option value="basic">Basic Setup </option>
+                  <option value="standard">Standard Platform</option>
+                  <option value="premium">Premium Custom </option>
+                  <option value="enterprise">Enterprise Solution </option>
                   <option value="discuss">Let's discuss</option>
                 </select>
               </div>

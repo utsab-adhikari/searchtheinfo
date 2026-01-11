@@ -190,6 +190,16 @@ export default function ArticleClient({ slug }: { slug: string }) {
     [article?.blocks]
   );
 
+  // Map each heading to its original block index to align IDs
+  const headingIndices = useMemo(
+    () =>
+      (article?.blocks || [])
+        .map((block, i) => ({ block, i }))
+        .filter(({ block }) => block.type === "heading")
+        .map(({ i }) => i),
+    [article?.blocks]
+  );
+
   if (loading) {
     return <ArticleSkeleton />;
   }
@@ -246,7 +256,9 @@ export default function ArticleClient({ slug }: { slug: string }) {
                   {headingBlocks.map((heading, index) => (
                     <li key={`${heading.content}-${index}`}>
                       <button
-                        onClick={() => scrollToHeading(`heading-${index}`)}
+                        onClick={() =>
+                          scrollToHeading(`heading-${headingIndices[index]}`)
+                        }
                         className="text-left w-full text-emerald-400 hover:text-emerald-300 transition-colors text-sm"
                         style={{
                           paddingLeft: `${((heading.level || 2) - 1) * 16}px`,
@@ -275,7 +287,9 @@ export default function ArticleClient({ slug }: { slug: string }) {
                     {headingBlocks.map((heading, index) => (
                       <li key={`${heading.content}-${index}`}>
                         <button
-                          onClick={() => scrollToHeading(`heading-${index}`)}
+                          onClick={() =>
+                            scrollToHeading(`heading-${headingIndices[index]}`)
+                          }
                           className="text-left w-full text-emerald-400 hover:text-emerald-300 transition-colors text-sm leading-relaxed"
                           style={{
                             paddingLeft: `${((heading.level || 2) - 1) * 16}px`,
@@ -486,7 +500,9 @@ export default function ArticleClient({ slug }: { slug: string }) {
                   {headingBlocks.map((heading, index) => (
                     <li key={`${heading.content}-${index}`}>
                       <button
-                        onClick={() => scrollToHeading(`heading-${index}`)}
+                        onClick={() =>
+                          scrollToHeading(`heading-${headingIndices[index]}`)
+                        }
                         className="text-left w-full text-emerald-300 hover:text-emerald-200 transition-colors text-sm"
                         style={{
                           paddingLeft: `${((heading.level || 2) - 1) * 14}px`,

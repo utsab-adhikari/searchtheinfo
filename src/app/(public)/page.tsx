@@ -124,7 +124,7 @@ export default function Home() {
             <span className="relative flex h-2 w-2">
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            New Article: Understanding Distributed Systems
+            live: version 0.1.1 (test) deployed jan 11, 2026
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6 text-white leading-tight">
@@ -251,7 +251,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="relative mx-auto mt-5 max-w-md rounded-xl border border-emerald-500/30 bg-zinc-900 p-6 shadow-lg">
+        <section className="relative mx-auto mt-5 max-w-md rounded-xl border border-emerald-500/30 bg-zinc-950 p-6 shadow-lg">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full border border-emerald-500 text-sm font-semibold text-emerald-400">
               UA

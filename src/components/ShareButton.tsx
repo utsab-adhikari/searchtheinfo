@@ -36,7 +36,7 @@ export default function ShareButton({ articleTitle, slug }: { articleTitle: stri
       </button>
 
       {showMenu && (
-        <div className="absolute right-0 bottom-full mb-2 bg-[#0f131d] border border-zinc-800 rounded-lg shadow-xl p-3 min-w-[200px] z-50">
+        <div className="absolute left-0 sm:right-0 sm:left-auto bottom-full mb-2 bg-[#0f131d] border border-zinc-800 rounded-lg shadow-xl p-3 min-w-[200px] z-50">
           <div className="flex flex-col gap-2">
             <a
               href={shareUrls.twitter}
