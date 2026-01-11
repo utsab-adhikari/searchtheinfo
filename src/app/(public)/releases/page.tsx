@@ -57,11 +57,8 @@ export default function ReleasesPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 pt-8 md:pb-12 md:pt-10">
         {/* Header */}
         <section className="mb-8 md:mb-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
-            Release Notes
-          </p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-            Platform Changelog
+            Releases &amp; Changelog
           </h1>
           <p className="mt-3 max-w-3xl text-sm text-zinc-400 md:text-base leading-relaxed">
             A chronological, versioned log of production changes across{" "}
