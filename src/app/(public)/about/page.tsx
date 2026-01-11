@@ -223,7 +223,6 @@ export default function AboutPage() {
             </a>
           </div>
         </section>
-
       </div>
     </div>
   );

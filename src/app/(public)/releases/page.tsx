@@ -24,7 +24,7 @@ const UPDATES: Update[] = [
     title: "Initial Test Version",
     date: "2026-01-11",
     displayDate: "jan 11, 2026",
-    time: "20:30",
+    time: "21:00",
     type: "release",
     scope: "project",
     description:
