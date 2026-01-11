@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import React, { useState, useEffect, useRef } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/administration' },
@@ -149,7 +150,10 @@ export default function AdministrationLayout({ children }: { children: React.Rea
       {/* MAIN CONTENT AREA - with smooth scroll */}
       <main className="flex-1 pt-16 lg:pt-0 h-screen overflow-y-auto relative">
         <div className="p-4 sm:p-6">
+          <ProtectedRoute>
+
           {children}
+          </ProtectedRoute>
         </div>
       </main>
     </div>
