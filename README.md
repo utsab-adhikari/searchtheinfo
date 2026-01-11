@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SearchTheInfo
 
-## Getting Started
+**SearchTheInfo** is a personal **research and academic platform** designed to collect, organize, and present **articles, papers, notes, and research summaries** in a clean and accessible way.
 
-First, run the development server:
+This repository holds the source code and project structure for the platform.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎯 Purpose
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+SearchTheInfo aims to:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Centralize academic and personal research materials
+* Provide quick access to articles, papers, and study notes
+* Help students, researchers, and learners explore verified and structured information
+* Maintain a digital library of ongoing studies and findings
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📚 What the Platform Includes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Research articles (personal + external references)
+* Academic papers and summaries
+* Topic-based collections
+* Insights, explanations, and breakdowns of complex ideas
+* Future integration of AI-assisted research tools
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Tech & Features (based on development progress)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* Clean and minimal UI
+* Categorized article/paper storage
+* Fast search functionality
+* SEO-optimized structure for discoverability
+* Scalable design for future academic tools
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚀 Roadmap
+
+Planned future enhancements:
+
+* Full-text search
+* Citation and reference system
+* AI assistant for summarizing research data
+* User accounts (optional)
+* Article recommendation engine
+* PDF viewer & paper analysis tools
+
+---
+
+## 📌 Goal
+
+To build a **personal but powerful academic ecosystem** that grows over time — improving research quality, accessibility, and knowledge organization.
+
+---
+
+**Search. Learn. Understand.**
+Welcome to **SearchTheInfo**.
