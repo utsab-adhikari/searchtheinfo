@@ -112,7 +112,7 @@ export async function deleteFromCloudinary(
   publicId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch("/api/upload/cloudinary", {
+    const response = await fetch("/api/upload/v1", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ publicId }),
