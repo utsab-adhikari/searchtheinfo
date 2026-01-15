@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/database/connectDB";
 import Article, { IArticle } from "@/models/v1/articleModelV1";
 import Category from "@/models/categoryModel";
+import User from "@/models/userModel";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { Types } from "mongoose";
@@ -170,7 +171,6 @@ export async function GET(
 
     const article = await Article.findOne({ slug: slug })
       .populate("category", "title description")
-      .populate("createdBy", "name email")
       .lean();
 
     if (!article)

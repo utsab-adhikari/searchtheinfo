@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/database/connectDB';
-import { Article } from '@/models';
+import { Article } from '@/models/v2/articleModelV2';
 
 export async function GET(req: Request) {
   try {
@@ -11,8 +11,8 @@ export async function GET(req: Request) {
 
     // Fetch recent articles with various statuses
     const activities = await Article.find()
-      .select('title slug status updatedAt publishedAt createdAt researchedBy')
-      .populate('researchedBy', 'name email')
+      .select('title slug status updatedAt publishedAt createdAt createdBy')
+      .populate('createdBy', 'name email')
       .sort({ updatedAt: -1 })
       .limit(limit * 2);
 

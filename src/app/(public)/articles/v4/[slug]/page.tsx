@@ -58,35 +58,43 @@ function renderTextWithLinks(text: string | undefined, links: Array<{ text: stri
   if (!text) return null;
   if (!links || links.length === 0) return text;
 
-  let result: React.ReactNode[] = [text];
+  // Sort links by text length (longest first) to avoid partial replacements
+  const sortedLinks = [...links].sort((a, b) => b.text.length - a.text.length);
   
-  // Replace each link's text with a clickable anchor
-  links.forEach((link) => {
-    result = result.map((node) => {
-      if (typeof node !== 'string') return node;
-      
-      const parts = node.split(link.text);
-      if (parts.length === 1) return node; // link text not found
-      
-      return parts.map((part, idx) => (
-        <React.Fragment key={idx}>
-          {idx > 0 && (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline transition-colors"
-            >
-              {link.text}
-            </a>
-          )}
-          {part}
-        </React.Fragment>
-      ));
+  let parts: (string | React.ReactNode)[] = [text];
+  
+  sortedLinks.forEach((link, linkIdx) => {
+    const newParts: (string | React.ReactNode)[] = [];
+    
+    parts.forEach((part) => {
+      if (typeof part === 'string') {
+        const segments = part.split(link.text);
+        segments.forEach((segment, segIdx) => {
+          newParts.push(segment);
+          if (segIdx < segments.length - 1) {
+            newParts.push(
+              <a
+                key={`link-${linkIdx}-${segIdx}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline decoration-blue-500/40 underline-offset-2 transition-all hover:decoration-blue-600 inline-flex items-center gap-0.5 font-medium"
+                title={link.url}
+              >
+                {link.text}
+              </a>
+            );
+          }
+        });
+      } else {
+        newParts.push(part);
+      }
     });
+    
+    parts = newParts;
   });
-
-  return result;
+  
+  return <>{parts}</>;
 }
 
 function findFirstImagePublicId(article: any): string | null {
@@ -544,9 +552,21 @@ function BlockRenderer({
 
   switch (block.type) {
     case "text":
+      // Debug logging
+      console.log('Text block:', { 
+        hasLinks: !!block.links, 
+        linksLength: block.links?.length,
+        links: block.links,
+        text: block.text 
+      });
+      
       return (
         <p className="text-base md:text-lg leading-[1.85] text-gray-800 whitespace-pre-wrap font-serif">
-          {renderTextWithLinks(block.text, block.links)}
+          {block.links && Array.isArray(block.links) && block.links.length > 0 ? (
+            renderTextWithLinks(block.text, block.links)
+          ) : (
+            block.text
+          )}
           <CitationSup />
         </p>
       );

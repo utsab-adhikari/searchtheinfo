@@ -106,15 +106,12 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   const authors = article.authors || [];
 
   return (
-    <div className={`${inter.className} min-h-screen bg-neutral-950 text-neutral-100`}>
-      {/* Subtle grid background */}
-      <div className="fixed inset-0 bg-[linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)] bg-[size:64px_64px] opacity-5 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-neutral-950/95 to-neutral-950 pointer-events-none" />
+    <div className={`${inter.className} min-h-screen bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] text-neutral-100`}>
 
       <div className="relative z-10">
         {/* Article Header */}
-        <header className="border-b border-neutral-800 bg-gradient-to-b from-neutral-900 to-neutral-950">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <header className="">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-neutral-500">
               <ol className="flex items-center space-x-2">
@@ -224,9 +221,9 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
         {/* Abstract Section */}
         {article.abstract && (
-          <section className="bg-gradient-to-b from-neutral-900 to-neutral-950 border-b border-neutral-800">
+          <section className="">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-              <div className="bg-neutral-900/50 rounded-xl p-6 md:p-8 border border-neutral-800 shadow-xl">
+              <div className="px-6 md:px-8 border-l-5 border-emerald-500">
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
                   <AbstractIcon className="w-6 h-6 text-emerald-500" />
                   Abstract
@@ -243,7 +240,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Article Actions */}
           <div className="sticky top-4 z-20 mb-12 flex justify-end">
-            <div className="flex items-center gap-3 bg-neutral-900/90 backdrop-blur-sm rounded-full p-2 border border-neutral-800 shadow-lg">
+            <div className="flex items-center gap-3">
               <ShareMenu
                 title={article.title}
                 url={`${process.env.NEXT_PUBLIC_SITE_URL || ""}/articles/v2/${article.slug}`}
@@ -352,35 +349,43 @@ function renderTextWithLinks(text: string | undefined, links: Array<{ text: stri
   if (!text) return null;
   if (!links || links.length === 0) return text;
 
-  let result: React.ReactNode[] = [text];
+  // Sort links by text length (longest first) to avoid partial replacements
+  const sortedLinks = [...links].sort((a, b) => b.text.length - a.text.length);
   
-  // Replace each link's text with a clickable anchor
-  links.forEach((link) => {
-    result = result.map((node) => {
-      if (typeof node !== 'string') return node;
-      
-      const parts = node.split(link.text);
-      if (parts.length === 1) return node; // link text not found
-      
-      return parts.map((part, idx) => (
-        <React.Fragment key={idx}>
-          {idx > 0 && (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 hover:text-emerald-300 underline transition-colors"
-            >
-              {link.text}
-            </a>
-          )}
-          {part}
-        </React.Fragment>
-      ));
+  let parts: (string | React.ReactNode)[] = [text];
+  
+  sortedLinks.forEach((link, linkIdx) => {
+    const newParts: (string | React.ReactNode)[] = [];
+    
+    parts.forEach((part) => {
+      if (typeof part === 'string') {
+        const segments = part.split(link.text);
+        segments.forEach((segment, segIdx) => {
+          newParts.push(segment);
+          if (segIdx < segments.length - 1) {
+            newParts.push(
+              <a
+                key={`link-${linkIdx}-${segIdx}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-serif text-emerald-400 hover:text-emerald-300 decoration-emerald-500/50 underline-offset-2 transition-all hover:decoration-emerald-400 inline-flex items-center gap-0.5"
+                title={link.url}
+              >
+                {link.text}
+              </a>
+            );
+          }
+        });
+      } else {
+        newParts.push(part);
+      }
     });
+    
+    parts = newParts;
   });
-
-  return result;
+  
+  return <>{parts}</>;
 }
 
 // Icons (you can replace with your actual icon components)
@@ -508,7 +513,11 @@ function BlockRenderer({ block, refIndexMap }: { block: any; refIndexMap: Map<st
       return (
         <div className="group">
           <p className="text-lg leading-relaxed text-neutral-300 tracking-normal whitespace-pre-wrap">
-            {renderTextWithLinks(block.text, block.links)}
+            {block.links && block.links.length > 0 ? (
+              renderTextWithLinks(block.text, block.links)
+            ) : (
+              block.text
+            )}
             <CitationSup />
           </p>
         </div>

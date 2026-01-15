@@ -1,9 +1,10 @@
 import connectDB from "@/database/connectDB";
-import Article, { IArticle } from "@/models/v1/articleModelV1";
+import { IArticle, Article } from "@/models/v2/articleModelV2";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { Types } from "mongoose";
+import Category from "@/models/categoryModel";
 
 interface CreateArticleRequest {
   title: string;

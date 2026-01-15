@@ -70,26 +70,40 @@ function isValidObjectId(id: any): boolean {
 }
 
 function sanitizeBlocks(blocks: any[] | undefined) {
-  if (!Array.isArray(blocks)) return [];
+  if (!Array.isArray(blocks)) return undefined;
   return blocks.map((b) => {
     const copy: any = { ...b };
     if (copy._id && !isValidObjectId(copy._id)) delete copy._id;
+    
+    // Sanitize links
+    if (Array.isArray(copy.links)) {
+      copy.links = copy.links.map((link: any) => ({
+        text: String(link.text || "").trim(),
+        url: String(link.url || "").trim(),
+      })).filter((link: any) => link.text && link.url);
+      if (copy.links.length === 0) delete copy.links;
+    }
+    
     return copy;
   });
 }
 
 function sanitizeSections(sections: any[] | undefined) {
-  if (!Array.isArray(sections)) return [];
+  if (!Array.isArray(sections)) return undefined;
   return sections.map((s, idx) => {
     const copy: any = { ...s };
     if (copy._id && !isValidObjectId(copy._id)) delete copy._id;
     // sanitize blocks
     copy.blocks = sanitizeBlocks(copy.blocks);
-    // sanitize nested subsections recursively
-    if (Array.isArray(copy.subsections)) {
-      copy.subsections = sanitizeSections(copy.subsections);
-    } else {
-      copy.subsections = [];
+    // support legacy "subsections" key by mapping to children
+    const childArray = Array.isArray(copy.children)
+      ? copy.children
+      : Array.isArray(copy.subsections)
+      ? copy.subsections
+      : undefined;
+    if (childArray) {
+      copy.children = sanitizeSections(childArray);
+      delete copy.subsections;
     }
     // ensure order is numeric
     if (typeof copy.order !== "number") copy.order = idx;
@@ -107,7 +121,6 @@ export async function GET(
     await connectDB();
 
     const article = await Article.findOne({ slug })
-      .populate("category", "title description")
       .populate("createdBy", "name email")
       .populate("references") 
       .lean<ArticleWithPopulated>();
@@ -132,7 +145,7 @@ export async function GET(
 export async function PUT(
   req: Request,
   { params }: RouteParams
-): Promise<NextResponse<{ success: true } | ErrorResponse>> {
+): Promise<NextResponse<{ success: true; article: any } | ErrorResponse>> {
   try {
     const { slug } = await params;
 
@@ -167,42 +180,46 @@ export async function PUT(
       );
     }
 
-
+    // Build update object with proper $set and $push operators
+    const setFields: any = {};
 
     if (typeof data.title === "string") {
-      article.title = data.title.trim();
+      setFields.title = data.title.trim();
     }
 
     if (typeof data.abstract === "string") {
-      article.abstract = data.abstract.trim();
+      setFields.abstract = data.abstract.trim();
     }
 
     if (Array.isArray(data.keywords)) {
-      article.keywords = data.keywords.map((k) => k.trim());
+      setFields.keywords = data.keywords.map((k) => k.trim());
     }
 
     if (
       data.status &&
       ["draft", "in-review", "published", "archived"].includes(data.status)
     ) {
-      article.status = data.status;
+      setFields.status = data.status;
     }
 
     if (typeof data.scratchPad === "string") {
-      article.scratchPad = data.scratchPad;
+      setFields.scratchPad = data.scratchPad;
     }
 
     if (typeof data.notes === "string") {
-      article.notes = data.notes;
+      setFields.notes = data.notes;
     }
 
     if (Array.isArray(data.sections)) {
-      article.sections = sanitizeSections(data.sections);
+      const sanitized = sanitizeSections(data.sections);
+      if (sanitized) {
+        setFields.sections = sanitized;
+      }
     }
 
     if (Array.isArray(data.references)) {
       // strip invalid _id on references
-      article.references = data.references.map((r: any) => {
+      setFields.references = data.references.map((r: any) => {
         const copy = { ...r };
         if (copy._id && !isValidObjectId(copy._id)) delete copy._id;
         return copy;
@@ -211,24 +228,37 @@ export async function PUT(
 
     if (Array.isArray(data.resources)) {
       // strip invalid _id on resources
-      article.resources = data.resources.map((r: any) => {
+      setFields.resources = data.resources.map((r: any) => {
         const copy = { ...r };
         if (copy._id && !isValidObjectId(copy._id)) delete copy._id;
         return copy;
       });
     }
 
-    // Revision log
-    article.revisions.push({
-      editedBy: new Types.ObjectId(session.user.id),
-      editedAt: new Date(),
-      summary: "Updated article",
-    });
+    const updateFields: any = { $set: setFields };
 
-    await article.save();
+    // Add revision log entry
+    updateFields.$push = {
+      revisions: {
+        editedBy: new Types.ObjectId(session.user.id),
+        editedAt: new Date(),
+        summary: "Updated article",
+      }
+    };
+    
+    const updated = await Article.findOneAndUpdate(
+      { slug },
+      updateFields,
+      { new: true, lean: true, runValidators: true }
+    );
 
-    // Return the updated article for client-side sync
-    const updated = await Article.findById(article._id).lean();
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, message: "Update failed" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ success: true, article: updated });
   } catch (error) {
     console.error("❌ Error updating article (v2):", error);

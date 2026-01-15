@@ -35,13 +35,13 @@ export default function Articles() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("/api/articles");
+        const res = await fetch("/api/articles/v2");
         if (!res.ok) {
           throw new Error("Failed to fetch articles");
         }
 
         const data = await res.json();
-        setArticles(data.data || []);
+        setArticles(data.articles || []);
       } catch (err: any) {
         setError(err.message || "Error loading articles");
         console.error("Failed to fetch articles:", err);

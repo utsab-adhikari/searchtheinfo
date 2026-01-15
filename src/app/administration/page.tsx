@@ -78,8 +78,8 @@ export default function AdministrationHome() {
       // Fetch actual stats and articles data from APIs
       const [statsResponse, articlesResponse, activityResponse] = await Promise.all([
         fetch('/api/dashboard/stats'),
-        fetch(`/api/articles?status=${activeTab === 'drafts' ? 'draft' : 'published'}&limit=10`),
-        fetch('/api/activity?limit=8')
+        fetch(`/api/articles/v2/?status=${activeTab === 'drafts' ? 'draft' : 'published'}&limit=10`),
+        fetch('/api/activity/v2/?limit=8')
       ]);
 
       // Process stats

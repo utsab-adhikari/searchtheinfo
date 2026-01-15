@@ -3,12 +3,15 @@ import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import React from "react";
 import Script from "next/script";
+import { useNavigationMetrics } from "@/hooks/useNavigationMetrics";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  useNavigationMetrics();
+
   return (
     <html lang="en">
       <head>

@@ -116,7 +116,6 @@ export async function GET(): Promise<
     await connectDB();
 
     const articles = await Article.find()
-      .populate("category", "title")
       .select("title slug status createdAt category")
       .sort({ createdAt: -1 })
       .lean<ArticleListItem[]>();

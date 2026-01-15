@@ -23,10 +23,16 @@ import {
 } from "@/lib/cloudinary";
 
 // Types mirrored from your schema (kept compatible)
+type Link = {
+  text: string;
+  url: string;
+};
+
 type ContentBlock = {
   _id?: string;
   type: "text" | "image" | "list" | "quote" | "code" | "equation";
   text?: string;
+  links?: Link[]; // array of links in text
   image?: {
     url: string;
     caption?: string;
@@ -56,7 +62,7 @@ type Section = {
     | "custom";
   order: number;
   blocks: ContentBlock[];
-  subsections?: Section[];
+  children?: Section[];
 };
 
 type Reference = {
@@ -212,6 +218,7 @@ export default function EditorSlugPage() {
       if (!res.ok) throw new Error(data.message || "Failed to save");
 
       setArticle(data.article || article);
+      // Only sync revisions, not sections (to avoid overwriting user's current edits)
       if (data.article?.revisions) setRevisions(data.article.revisions || []);
       setLastSavedAt(new Date());
       setDirty(false);
@@ -262,7 +269,7 @@ export default function EditorSlugPage() {
       type,
       order: sections.length,
       blocks: [],
-      subsections: [],
+      children: [],
     };
     setSections((prev) => [...prev, s]);
     scheduleAutosave();
@@ -294,11 +301,11 @@ export default function EditorSlugPage() {
   function addSubsection(sectionIdx: number) {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { blocks: [], subsections: [] }) } as Section;
-      const subs = parent.subsections ? [...parent.subsections] : [];
-      const sub: Section = { _id: `ss_${Date.now()}`, title: "New Subsection", type: "custom", order: subs.length, blocks: [], subsections: [] };
-      subs.push(sub);
-      parent.subsections = subs;
+      const parent = { ...(next[sectionIdx] || { blocks: [], children: [] }) } as Section;
+      const children = parent.children ? [...parent.children] : [];
+      const sub: Section = { _id: `ss_${Date.now()}`, title: "New Subsection", type: "custom", order: children.length, blocks: [], children: [] };
+      children.push(sub);
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -308,10 +315,10 @@ export default function EditorSlugPage() {
   function updateSubsection(sectionIdx: number, subIdx: number, patch: Partial<Section>) {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = [...(parent.subsections || [])];
-      subs[subIdx] = { ...subs[subIdx], ...patch };
-      parent.subsections = subs;
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = [...(parent.children || [])];
+      children[subIdx] = { ...children[subIdx], ...patch };
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -321,9 +328,9 @@ export default function EditorSlugPage() {
   function removeSubsection(sectionIdx: number, subIdx: number) {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = (parent.subsections || []).filter((_, i) => i !== subIdx).map((s, i) => ({ ...s, order: i }));
-      parent.subsections = subs;
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = (parent.children || []).filter((_, i) => i !== subIdx).map((s, i) => ({ ...s, order: i }));
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -333,12 +340,12 @@ export default function EditorSlugPage() {
   function moveSubsection(sectionIdx: number, subIdx: number, dir: "up" | "down") {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = [...(parent.subsections || [])];
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = [...(parent.children || [])];
       const to = dir === "up" ? subIdx - 1 : subIdx + 1;
-      if (to < 0 || to >= subs.length) return prev;
-      [subs[subIdx], subs[to]] = [subs[to], subs[subIdx]];
-      parent.subsections = subs.map((s, i) => ({ ...s, order: i }));
+      if (to < 0 || to >= children.length) return prev;
+      [children[subIdx], children[to]] = [children[to], children[subIdx]];
+      parent.children = children.map((s, i) => ({ ...s, order: i }));
       next[sectionIdx] = parent;
       return next;
     });
@@ -356,12 +363,12 @@ export default function EditorSlugPage() {
     };
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = [...(parent.subsections || [])];
-      const sub = { ...(subs[subIdx] || { blocks: [] }) } as Section;
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = [...(parent.children || [])];
+      const sub = { ...(children[subIdx] || { blocks: [] }) } as Section;
       sub.blocks = [...(sub.blocks || []), blk];
-      subs[subIdx] = sub;
-      parent.subsections = subs;
+      children[subIdx] = sub;
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -371,14 +378,14 @@ export default function EditorSlugPage() {
   function updateBlockInSubsection(sectionIdx: number, subIdx: number, blockIdx: number, patch: Partial<ContentBlock>) {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = [...(parent.subsections || [])];
-      const sub = { ...(subs[subIdx] || { blocks: [] }) } as Section;
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = [...(parent.children || [])];
+      const sub = { ...(children[subIdx] || { blocks: [] }) } as Section;
       const blks = [...(sub.blocks || [])];
       blks[blockIdx] = { ...blks[blockIdx], ...(patch as any) };
       sub.blocks = blks;
-      subs[subIdx] = sub;
-      parent.subsections = subs;
+      children[subIdx] = sub;
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -388,12 +395,12 @@ export default function EditorSlugPage() {
   function removeBlockFromSubsection(sectionIdx: number, subIdx: number, blockIdx: number) {
     setSections((prev) => {
       const next = [...prev];
-      const parent = { ...(next[sectionIdx] || { subsections: [] }) } as Section;
-      const subs = [...(parent.subsections || [])];
-      const sub = { ...(subs[subIdx] || { blocks: [] }) } as Section;
+      const parent = { ...(next[sectionIdx] || { children: [] }) } as Section;
+      const children = [...(parent.children || [])];
+      const sub = { ...(children[subIdx] || { blocks: [] }) } as Section;
       sub.blocks = (sub.blocks || []).filter((_, i) => i !== blockIdx);
-      subs[subIdx] = sub;
-      parent.subsections = subs;
+      children[subIdx] = sub;
+      parent.children = children;
       next[sectionIdx] = parent;
       return next;
     });
@@ -672,6 +679,117 @@ export default function EditorSlugPage() {
     );
   }
 
+  function LinkManager({
+    block,
+    onChange,
+  }: {
+    block: ContentBlock;
+    onChange: (patch: Partial<ContentBlock>) => void;
+  }) {
+    const [showLinksPanel, setShowLinksPanel] = useState(false);
+    const [newLinkText, setNewLinkText] = useState("");
+    const [newLinkUrl, setNewLinkUrl] = useState("");
+
+    function addLink() {
+      if (!newLinkText.trim() || !newLinkUrl.trim()) {
+        alert("Both link text and URL are required");
+        return;
+      }
+      const updatedLinks = [...(block.links || []), { text: newLinkText, url: newLinkUrl }];
+      onChange({ links: updatedLinks });
+      setNewLinkText("");
+      setNewLinkUrl("");
+    }
+
+    function removeLink(idx: number) {
+      const updatedLinks = (block.links || []).filter((_, i) => i !== idx);
+      onChange({ links: updatedLinks.length > 0 ? updatedLinks : undefined });
+    }
+
+    const linkCount = block.links?.length || 0;
+
+    return (
+      <div>
+        {/* Compact Link Button */}
+        <button
+          type="button"
+          onClick={() => setShowLinksPanel(!showLinksPanel)}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition ${
+            showLinksPanel
+              ? "bg-emerald-600/20 border border-emerald-600/50 text-emerald-300"
+              : linkCount > 0
+              ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+              : "bg-zinc-800/50 border border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          Links {linkCount > 0 && `(${linkCount})`}
+        </button>
+
+        {/* Expandable Links Panel */}
+        {showLinksPanel && (
+          <div className="mt-3 border border-zinc-800 rounded-md p-3 bg-zinc-950/50">
+            {/* Display existing links */}
+            {block.links && block.links.length > 0 && (
+              <div className="space-y-2 mb-4 pb-4 border-b border-zinc-800">
+                {block.links.map((link, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 p-2 bg-zinc-900 rounded border border-zinc-700 text-xs">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-zinc-300 truncate">
+                        <span className="text-zinc-500">Text:</span> {link.text}
+                      </div>
+                      <div className="text-blue-400 truncate mt-0.5">
+                        <span className="text-zinc-500">URL:</span> {link.url}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeLink(idx)}
+                      className="flex-shrink-0 p-1 hover:bg-red-600/20 rounded transition text-red-400"
+                      title="Remove link"
+                    >
+                      <Trash className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new link */}
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={newLinkText}
+                onChange={(e) => setNewLinkText(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && addLink()}
+                placeholder="Link text (e.g., 'Read more')"
+                className="w-full bg-transparent border border-zinc-700 rounded-md p-2 text-sm text-zinc-200 placeholder-zinc-500 focus:border-emerald-600 focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={newLinkUrl}
+                  onChange={(e) => setNewLinkUrl(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && addLink()}
+                  placeholder="https://example.com"
+                  className="flex-1 bg-transparent border border-zinc-700 rounded-md p-2 text-sm text-zinc-200 placeholder-zinc-500 focus:border-emerald-600 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={addLink}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-600/50 text-emerald-300 text-xs font-medium transition"
+                >
+                  <Plus className="w-3 h-3" /> Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
   // Renderers
   if (loading) {
     return (
@@ -868,12 +986,19 @@ export default function EditorSlugPage() {
 
                         {/* Block Editors */}
                         {blk.type === "text" && (
-                          <textarea
-                            value={blk.text || ""}
-                            onChange={(e) => updateBlock(sidx, bidx, { text: e.target.value })}
-                            placeholder="Write paragraph..."
-                            className="w-full min-h-[90px] bg-transparent border border-zinc-800 rounded-md p-3 text-sm text-zinc-200 resize-y"
-                          />
+                          <div className="space-y-4">
+                            <textarea
+                              value={blk.text || ""}
+                              onChange={(e) => updateBlock(sidx, bidx, { text: e.target.value })}
+                              placeholder="Write paragraph..."
+                              className="w-full min-h-[90px] bg-transparent border border-zinc-800 rounded-md p-3 text-sm text-zinc-200 resize-y"
+                            />
+                            {/* Links Manager */}
+                            <LinkManager
+                              block={blk}
+                              onChange={(patch) => updateBlock(sidx, bidx, patch)}
+                            />
+                          </div>
                         )}
 
                         {blk.type === "code" && (
@@ -978,10 +1103,10 @@ export default function EditorSlugPage() {
                     ))}
 
                     {/* Subsections (nested) */}
-                    {sec.subsections?.length ? (
+                    {sec.children?.length ? (
                       <div className="mt-4 space-y-4">
                         <div className="text-sm font-medium text-zinc-300">Subsections</div>
-                        {sec.subsections.map((sub, subIdx) => (
+                        {sec.children.map((sub, subIdx) => (
                           <div key={sub._id || subIdx} className="bg-zinc-900/20 border border-zinc-800 rounded-md p-3">
                             <div className="flex items-start justify-between gap-3 mb-2">
                               <div className="flex-1">

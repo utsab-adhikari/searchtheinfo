@@ -1,7 +1,3 @@
-/**
- * Cloudinary Upload Utility
- * Handles image uploads to Cloudinary with proper error handling
- */
 
 export interface CloudinaryUploadResult {
   success: boolean;
@@ -35,7 +31,7 @@ export async function uploadToCloudinary(
     const base64 = await fileToBase64(file);
 
     // Call our API endpoint
-    const response = await fetch("/api/upload/cloudinary", {
+    const response = await fetch("/api/upload/v1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

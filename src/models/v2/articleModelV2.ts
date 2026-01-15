@@ -28,9 +28,15 @@ export interface IResource {
   description?: string;
 }
 
+export interface ILink {
+  text: string; // visible text
+  url: string; // hyperlink URL
+}
+
 export interface IContentBlock {
   type: "text" | "image" | "list" | "quote" | "code" | "equation";
   text?: string;
+  links?: ILink[]; // array of links within text
 
   image?: {
     url: string;
@@ -148,6 +154,14 @@ const ResourceSchema = new Schema<IResource>(
   { _id: true }
 );
 
+const LinkSchema = new Schema<ILink>(
+  {
+    text: { type: String, required: true, trim: true },
+    url: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
+
 const ContentBlockSchema = new Schema<IContentBlock>(
   {
     type: {
@@ -156,6 +170,7 @@ const ContentBlockSchema = new Schema<IContentBlock>(
       required: true,
     },
     text: { type: String },
+    links: [LinkSchema],
 
     image: {
       url: String,
