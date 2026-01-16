@@ -20,6 +20,7 @@
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "draft-js": "^0.11.7",
     "lucide-react": "^0.556.0",
     "mongoose": "^9.1.2",
     "next": "16.1.1",
@@ -29,6 +30,7 @@
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.5.0",
     "recharts": "^2.15.4",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
