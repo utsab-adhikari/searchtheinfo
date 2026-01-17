@@ -1,7 +1,7 @@
 import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { MongoDBAdapter } from '@auth/mongodb-adapter';
+import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import clientPromise from '@/config/mongodb';
 import connectDB from '@/database/connectDB';
 import User from '@/models/userModel';
