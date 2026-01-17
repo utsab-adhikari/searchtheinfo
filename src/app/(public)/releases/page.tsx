@@ -20,6 +20,18 @@ interface Update {
 const UPDATES: Update[] = [
   {
     id: "0001",
+    version: "test 1.0.0",
+    title: "Test Version 1.0.0",
+    date: "2026-01-17",
+    displayDate: "jan 17, 2026",
+    time: "23:32",
+    type: "release",
+    scope: "project",
+    description:
+      "Test deployment of the platform. Core infrastructure setup including Next.js framework, MongoDB database connection, authentication system, and basic routing structure.",
+  },
+    {
+    id: "0002",
     version: "0.1.1",
     title: "Initial Test Version",
     date: "2026-01-11",

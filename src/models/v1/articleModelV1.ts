@@ -6,13 +6,15 @@ export interface IAuthor {
   email?: string;
   orcid?: string;
 }
-
 export interface IReference {
   title: string;
   authors?: string;
   publisher?: string;
   year?: number;
   journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
   doi?: string;
   url?: string;
   accessedAt?: Date;
@@ -26,22 +28,30 @@ export interface IResource {
   description?: string;
 }
 
+export interface ILink {
+  text: string; // visible text
+  url: string; // hyperlink URL
+}
+
 export interface IContentBlock {
   type: "text" | "image" | "list" | "quote" | "code" | "equation";
   text?: string;
+  links?: ILink[]; // array of links within text
+
   image?: {
     url: string;
     caption?: string;
     credit?: string;
-    // New optional Cloudinary metadata for lifecycle + optimization
     publicId?: string;
     width?: number;
     height?: number;
     format?: string;
   };
+
   listItems?: string[];
   quoteAuthor?: string;
   codeLanguage?: string;
+
   citations?: Types.ObjectId[];
 }
 
@@ -55,8 +65,14 @@ export interface ISection {
     | "discussion"
     | "conclusion"
     | "custom";
+
   order: number;
+
   blocks: IContentBlock[];
+
+  citations?: Types.ObjectId[];
+
+  children?: ISection[];
 }
 
 export interface IRevision {
@@ -76,11 +92,11 @@ export interface IArticle extends Document {
 
   sections: ISection[];
 
-  references: IReference[];
+  references: Types.ObjectId[];
   resources: IResource[];
 
-  scratchPad: string;
-  notes: string;
+  scratchPad?: string;
+  notes?: string;
 
   status: "draft" | "in-review" | "published" | "archived";
 
@@ -98,26 +114,29 @@ export interface IArticle extends Document {
 
 const AuthorSchema = new Schema<IAuthor>(
   {
-    name: { type: String, required: true },
-    affiliation: String,
-    email: String,
-    orcid: String,
+    name: { type: String, required: true, trim: true },
+    affiliation: { type: String, trim: true },
+    email: { type: String, trim: true, lowercase: true },
+    orcid: { type: String, trim: true },
   },
   { _id: false }
 );
 
 const ReferenceSchema = new Schema<IReference>(
   {
-    title: { type: String, required: true },
-    authors: String,
-    publisher: String,
+    title: { type: String, required: true, trim: true },
+    authors: { type: String, trim: true },
+    publisher: { type: String, trim: true },
     year: Number,
     journal: String,
-    doi: String,
-    url: String,
+    volume: String,
+    issue: String,
+    pages: String,
+    doi: { type: String, trim: true },
+    url: { type: String, trim: true },
     accessedAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { timestamps: true }
 );
 
 const ResourceSchema = new Schema<IResource>(
@@ -127,12 +146,20 @@ const ResourceSchema = new Schema<IResource>(
       enum: ["book", "website", "youtube", "paper", "course", "other"],
       required: true,
     },
-    title: { type: String, required: true },
-    author: String,
-    url: String,
-    description: String,
+    title: { type: String, required: true, trim: true },
+    author: { type: String, trim: true },
+    url: { type: String, trim: true },
+    description: { type: String, trim: true },
   },
   { _id: true }
+);
+
+const LinkSchema = new Schema<ILink>(
+  {
+    text: { type: String, required: true, trim: true },
+    url: { type: String, required: true, trim: true },
+  },
+  { _id: false }
 );
 
 const ContentBlockSchema = new Schema<IContentBlock>(
@@ -142,7 +169,9 @@ const ContentBlockSchema = new Schema<IContentBlock>(
       enum: ["text", "image", "list", "quote", "code", "equation"],
       required: true,
     },
-    text: String,
+    text: { type: String },
+    links: [LinkSchema],
+
     image: {
       url: String,
       caption: String,
@@ -152,17 +181,20 @@ const ContentBlockSchema = new Schema<IContentBlock>(
       height: Number,
       format: String,
     },
-    listItems: [String],
+
+    listItems: [{ type: String }],
     quoteAuthor: String,
     codeLanguage: String,
-    citations: [{ type: Schema.Types.ObjectId }],
+
+    citations: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
   },
   { _id: true }
 );
 
 const SectionSchema = new Schema<ISection>(
   {
-    title: { type: String, required: true },
+    title: { type: String, required: true, trim: true },
+
     type: {
       type: String,
       enum: [
@@ -176,17 +208,28 @@ const SectionSchema = new Schema<ISection>(
       ],
       default: "custom",
     },
+
     order: { type: Number, default: 0 },
+
     blocks: [ContentBlockSchema],
+
+    citations: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
+
+    children: [],
   },
   { _id: true }
 );
+
+SectionSchema.add({
+  children: [SectionSchema],
+});
+
 
 const RevisionSchema = new Schema<IRevision>(
   {
     editedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     editedAt: { type: Date, default: Date.now },
-    summary: String,
+    summary: { type: String, trim: true },
   },
   { _id: true }
 );
@@ -194,17 +237,24 @@ const RevisionSchema = new Schema<IRevision>(
 const ArticleSchema = new Schema<IArticle>(
   {
     title: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true, lowercase: true },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
 
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
-    abstract: { type: String, required: true },
+
+    abstract: { type: String, required: true, trim: true },
     keywords: [{ type: String, index: true }],
 
     authors: [AuthorSchema],
 
     sections: [SectionSchema],
 
-    references: [ReferenceSchema],
+    references: [{ type: Schema.Types.ObjectId, ref: "Reference" }],
     resources: [ResourceSchema],
 
     scratchPad: { type: String, default: "" },
@@ -214,6 +264,7 @@ const ArticleSchema = new Schema<IArticle>(
       type: String,
       enum: ["draft", "in-review", "published", "archived"],
       default: "draft",
+      index: true,
     },
 
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
@@ -228,12 +279,15 @@ const ArticleSchema = new Schema<IArticle>(
     },
 
     views: { type: Number, default: 0 },
-    isFeatured: { type: Boolean, default: false },
+    isFeatured: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
 
-const Article =
-  mongoose.models.Article || mongoose.model<IArticle>("Article", ArticleSchema, "articles");
+export const Article =
+  mongoose.models.ArticleV1 ||
+  mongoose.model<IArticle>("ArticleV1", ArticleSchema, "articlesv1");
 
-export default Article;
+export const Reference =
+  mongoose.models.Reference ||
+  mongoose.model<IReference>("Reference", ReferenceSchema, "references");

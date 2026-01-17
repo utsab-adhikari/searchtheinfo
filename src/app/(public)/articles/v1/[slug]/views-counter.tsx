@@ -18,7 +18,7 @@ export default function ViewsCounter({ slug, initialViews }: { slug: string; ini
 
     (async () => {
       try {
-        const res = await fetch(`/api/v1/articles/${encodeURIComponent(slug)}/views`, { method: "PATCH" });
+        const res = await fetch(`/api/articles/v1/${encodeURIComponent(slug)}/views`, { method: "PATCH" });
         const data = await res.json();
         if (res.ok && typeof data.views === "number") {
           setViews(data.views);

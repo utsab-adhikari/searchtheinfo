@@ -21,13 +21,13 @@ export default function NewArticlePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Auto-generate slug from title
   useEffect(() => {
     const generated = title
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
+
     setSlug(generated);
   }, [title]);
 
@@ -36,9 +36,12 @@ export default function NewArticlePage() {
       try {
         const res = await fetch("/api/categories");
         const data = await res.json();
+
+        if (!res.ok) throw new Error(data.message || "Failed to load categories");
+
         setCategories(data.data || []);
       } catch (err) {
-        console.error("Failed to load categories");
+        console.error("❌ Failed to load categories:", err);
       }
     };
 
@@ -50,7 +53,7 @@ export default function NewArticlePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/v1/articles", {
+      const res = await fetch("/api/articles/v1", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,10 +78,10 @@ export default function NewArticlePage() {
         return;
       }
 
-      // Redirect to editor page
       router.push(`/editor/v1/${slug}`);
     } catch (error) {
-      alert("Something went wrong");
+      console.error("❌ Create article error:", error);
+      alert("Something went wrong while creating the article");
       setLoading(false);
     }
   };
@@ -91,7 +94,7 @@ export default function NewArticlePage() {
         {/* Header */}
         <div className="mb-10">
           <p className="text-xs uppercase tracking-widest text-emerald-500 mb-2">
-            Research Editor
+            Research Editor · v2
           </p>
           <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
             Initialize New Article
@@ -136,7 +139,7 @@ export default function NewArticlePage() {
               required
             />
             <p className="text-xs text-zinc-500 mt-1">
-              This becomes: /editor/{slug || "your-slug"}
+              This becomes: /editor/v2/{slug || "your-slug"}
             </p>
           </div>
 

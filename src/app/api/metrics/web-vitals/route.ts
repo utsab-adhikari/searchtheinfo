@@ -1,33 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logMetric } from "@/lib/monitoring/logger";
+import type { MetricKind } from "@/lib/monitoring/types";
 import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
 
-interface ApiMetricPayload {
-  name: string;
-  duration: number;
-  status?: string | number;
-  path?: string;
-  method?: string;
-  metadata?: Record<string, unknown>;
+interface WebVitalPayload {
+  name: string; // e.g. LCP, FID
+  value: number;
+  id?: string;
+  label?: string;
+  path: string;
+  type?: MetricKind;
 }
 
 async function handlePost(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json();
-    const events: ApiMetricPayload[] = Array.isArray(body) ? body : [body];
+    const events: WebVitalPayload[] = Array.isArray(body) ? body : [body];
 
     await Promise.all(
       events.map((event) =>
         logMetric({
-          type: "api",
+          type: event.type || "frontend",
           name: event.name,
-          duration: event.duration,
-          status: event.status ? String(event.status) : undefined,
+          duration: event.value,
           metadata: {
-            ...(event.metadata || {}),
             path: event.path,
-            method: event.method,
-            source: "api-client",
+            id: event.id,
+            label: event.label,
+            source: "web-vitals",
           },
         })
       )
@@ -36,13 +36,13 @@ async function handlePost(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: "Failed to ingest API metrics" },
+      { success: false, message: "Failed to ingest web vitals" },
       { status: 400 }
     );
   }
 }
 
 export const POST = withApiTimingSimple(
-  "metrics-api-post",
+  "metrics-web-vitals-post",
   handlePost
 );

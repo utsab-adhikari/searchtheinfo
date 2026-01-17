@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/connectDB";
 import InterestedModel from "@/models/interestedModel";
+import { withDbTiming } from "@/lib/monitoring/dbTimer";
+import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
 
-export async function GET(req: Request) {
+async function handleGetInterested(req: NextRequest) {
   try {
     await connectDB();
 
@@ -12,12 +14,16 @@ export async function GET(req: Request) {
     const sortBy = searchParams.get("sortBy") || "createdAt";
     const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
 
-    const interestedList = await InterestedModel.find()
-      .sort({ [sortBy]: sortOrder })
-      .limit(limit)
-      .skip(skip);
+    const interestedList = await withDbTiming("interested-find", () =>
+      InterestedModel.find()
+        .sort({ [sortBy]: sortOrder })
+        .limit(limit)
+        .skip(skip)
+    );
 
-    const total = await InterestedModel.countDocuments();
+    const total = await withDbTiming("interested-count", () =>
+      InterestedModel.countDocuments()
+    );
 
     return NextResponse.json({
       data: interestedList,
@@ -34,7 +40,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+async function handlePostInterested(req: NextRequest) {
   try {
     await connectDB();
 
@@ -48,14 +54,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const interested = await InterestedModel.create({
+    const interested = await withDbTiming("interested-create", () =>
+      InterestedModel.create({
       name,
       email,
       type: projectType,
       description: `Research Topics: ${researchTopics}\n\nRequirements: ${requirements}`,
       timeline,
       budget,
-    });
+      })
+    );
 
     return NextResponse.json(
       {
@@ -73,7 +81,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+async function handleDeleteInterested(req: NextRequest) {
   try {
     await connectDB();
 
@@ -87,7 +95,9 @@ export async function DELETE(req: Request) {
       );
     }
 
-    const result = await InterestedModel.findByIdAndDelete(id);
+    const result = await withDbTiming("interested-delete", () =>
+      InterestedModel.findByIdAndDelete(id)
+    );
 
     if (!result) {
       return NextResponse.json(
@@ -107,3 +117,7 @@ export async function DELETE(req: Request) {
     );
   }
 }
+
+export const GET = withApiTimingSimple("interested-get", handleGetInterested);
+export const POST = withApiTimingSimple("interested-post", handlePostInterested);
+export const DELETE = withApiTimingSimple("interested-delete", handleDeleteInterested);

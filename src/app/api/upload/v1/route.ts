@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,7 +8,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function POST(req: Request) {
+async function handlePost(req: NextRequest) {
   try {
     const { file, folder = "articles", filename } = await req.json();
 
@@ -31,13 +32,14 @@ export async function POST(req: Request) {
       height: uploadRes.height,
       format: uploadRes.format,
     });
-  } catch (err: any) {
-    console.error("Cloudinary upload error:", err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Cloudinary upload error:", message);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
 
-export async function DELETE(req: Request) {
+async function handleDelete(req: NextRequest) {
   try {
     const { publicId } = await req.json();
     if (!publicId) {
@@ -52,8 +54,12 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error("Cloudinary delete error:", err?.message || err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Cloudinary delete error:", message);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }
+
+export const POST = withApiTimingSimple("upload-v1-post", handlePost);
+export const DELETE = withApiTimingSimple("upload-v1-delete", handleDelete);

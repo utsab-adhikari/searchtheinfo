@@ -1,9 +1,10 @@
 import connectDB from "@/database/connectDB";
 import User from "@/models/userModel";
 import bcrypt from "bcryptjs";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
 
-export async function POST(req: Request) {
+async function handlePost(req: NextRequest) {
   try {
     const { name, email, password } = await req.json();
 
@@ -19,7 +20,11 @@ export async function POST(req: Request) {
     await User.create({ name, email, password: hashedPassword, role: "user" });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ message: "Error creating user" }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Error creating user";
+    console.error("Error creating user:", message);
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
+
+export const POST = withApiTimingSimple("auth-signup-post", handlePost);

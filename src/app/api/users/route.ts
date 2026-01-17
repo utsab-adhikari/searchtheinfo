@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import connectDB from "@/database/connectDB";
 import User from "@/models/userModel";
+import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
+import { withDbTiming } from "@/lib/monitoring/dbTimer";
 
-export async function GET(req: Request) {
+async function handleGetUsers(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -17,7 +19,7 @@ export async function GET(req: Request) {
     const role = searchParams.get("role");
     const search = searchParams.get("search");
 
-    let query: any = {};
+    let query: Record<string, unknown> = {};
     
     if (role) {
       query.role = role;
@@ -30,10 +32,12 @@ export async function GET(req: Request) {
       ];
     }
 
-    const users = await User.find(query)
-      .select("-password -forgetPasswordToken -forgetPasswordTokenExpireesAt")
-      .sort({ createdAt: -1 })
-      .lean();
+    const users = await withDbTiming("users-find", () =>
+      User.find(query)
+        .select("-password -forgetPasswordToken -forgetPasswordTokenExpireesAt")
+        .sort({ createdAt: -1 })
+        .lean()
+    );
 
     return NextResponse.json({ data: users });
   } catch (error: any) {
@@ -42,7 +46,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function PUT(req: Request) {
+async function handlePutUser(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -74,7 +78,7 @@ export async function PUT(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+async function handleDeleteUser(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -98,3 +102,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+export const GET = withApiTimingSimple("users-get", handleGetUsers);
+export const PUT = withApiTimingSimple("users-put", handlePutUser);
+export const DELETE = withApiTimingSimple("users-delete", handleDeleteUser);

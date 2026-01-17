@@ -124,7 +124,7 @@ export default function Home() {
             <span className="relative flex h-2 w-2">
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            live: version 0.1.1 (test) deployed jan 11, 2026
+            live: version 1.0.0 (test) deployed jan 17, 2026
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6 text-white leading-tight">

@@ -55,7 +55,7 @@ export default function ArticlesPage() {
   const loadArticles = async () => {
     setLoading(true);
     try {
-      let url = `/api/articles?`;
+      let url = `/api/articles/v1?`;
       if (statusFilter !== "all") url += `status=${statusFilter}&`;
       if (search) url += `search=${encodeURIComponent(search)}`;
       
@@ -83,7 +83,7 @@ export default function ArticlesPage() {
     if (!confirm("Are you sure you want to delete this article? This cannot be undone.")) return;
 
     try {
-      const res = await fetch(`/api/articles?id=${articleId}`, {
+      const res = await fetch(`/api/articles/v1?id=${articleId}`, {
         method: "DELETE",
       });
 
@@ -136,7 +136,7 @@ export default function ArticlesPage() {
             <p className="text-xs text-zinc-500 mt-1">{stats.total} Total Articles</p>
           </div>
           <Link
-            href="/editor/new"
+            href="/editor/v1/new"
             className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm shadow-emerald-900/20"
           >
             <FileText className="w-3.5 h-3.5" />
@@ -228,7 +228,7 @@ export default function ArticlesPage() {
               <h3 className="text-sm font-bold text-zinc-400 mb-1">No articles found</h3>
               <p className="text-xs text-zinc-600 mb-4">Create your first article to get started</p>
               <Link
-                href="/editor/new"
+                href="/editor/v1/new"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all"
               >
                 <FileText className="w-3.5 h-3.5" />

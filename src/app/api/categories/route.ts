@@ -1,18 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import connectDB from "@/database/connectDB";
 import Category from "@/models/categoryModel";
+import { withApiTimingSimple } from "@/lib/monitoring/apiTimer";
+import { withDbTiming } from "@/lib/monitoring/dbTimer";
 
-export async function GET() {
+async function handleGetCategories() {
   await connectDB();
-  const categories = await Category.find()
-    .sort({ title: 1 })
-    .populate("createdBy", "name email");
+  const categories = await withDbTiming("categories-find", () =>
+    Category.find()
+      .sort({ title: 1 })
+      .populate("createdBy", "name email")
+  );
   return NextResponse.json({ data: categories });
 }
 
-export async function POST(req: Request) {
+async function handlePostCategory(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
   return NextResponse.json({ data: category }, { status: 201 });
 }
 
-export async function PUT(req: Request) {
+async function handlePutCategory(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -91,7 +95,7 @@ export async function PUT(req: Request) {
   return NextResponse.json({ data: category });
 }
 
-export async function DELETE(req: Request) {
+async function handleDeleteCategory(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -132,3 +136,8 @@ export async function DELETE(req: Request) {
   await category.deleteOne();
   return NextResponse.json({ message: "Category deleted" }, { status: 200 });
 }
+
+export const GET = withApiTimingSimple("categories-get", handleGetCategories);
+export const POST = withApiTimingSimple("categories-post", handlePostCategory);
+export const PUT = withApiTimingSimple("categories-put", handlePutCategory);
+export const DELETE = withApiTimingSimple("categories-delete", handleDeleteCategory);

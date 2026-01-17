@@ -35,7 +35,7 @@ export default function Articles() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("/api/articles/v2");
+        const res = await fetch("/api/articles/v1");
         if (!res.ok) {
           throw new Error("Failed to fetch articles");
         }

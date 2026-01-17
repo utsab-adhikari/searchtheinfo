@@ -1,23 +1,16 @@
 "use client";
 import {
   LogOut,
-  Menu,
-  X,
   LayoutDashboard,
   FileText,
-  ImageIcon,
   Users,
   BarChart3,
   Settings,
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  Bell,
-  Search,
-  Clock,
-  Activity,
-  AlertTriangle,
-  Eye,
+  Plus,
+  ChartBar,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -28,8 +21,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/administration" },
   { label: "Articles", icon: FileText, href: "/administration/articles" },
-  { label: "Media Library", icon: ImageIcon, href: "/administration/media" },
+  { label: "New Article", icon: Plus, href: "/editor/v1/new" },
   { label: "User Control", icon: Users, href: "/administration/users" },
+  { label: "Analytics", icon: ChartBar, href: "/administration/analytics" },
   { label: "Interested", icon: BarChart3, href: "/administration/interested" },
   {
     label: "System Settings",
