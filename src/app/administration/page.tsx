@@ -240,7 +240,7 @@ export default async function AdministrationHome() {
               <span className="hidden xs:inline">Articles</span>
             </Link>
             <Link
-              href="/editor/new"
+              href="/editor/v1/new"
               className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all shadow-sm shadow-emerald-900/20"
             >
               <FilePlus className="w-3.5 h-3.5" />
