@@ -27,7 +27,7 @@ interface Article {
     title: string;
     slug: string;
   };
-  researchedBy?: {
+  createdBy?: {
     _id: string;
     name: string;
   };
@@ -270,7 +270,7 @@ export default function ArticlesPage() {
                       <td className="p-3">
                         <div>
                           <Link
-                            href={`/editor/${article.slug}`}
+                            href={`/editor/v1/${article.slug}`}
                             className="font-medium text-white hover:text-emerald-400 transition-colors line-clamp-1"
                           >
                             {article.title}
@@ -293,10 +293,10 @@ export default function ArticlesPage() {
                         )}
                       </td>
                       <td className="p-3 hidden md:table-cell">
-                        {article.researchedBy ? (
+                        {article.createdBy ? (
                           <span className="flex items-center gap-1.5 text-zinc-400">
                             <User className="w-3 h-3" />
-                            {article.researchedBy.name}
+                            {article.createdBy.name}
                           </span>
                         ) : (
                           <span className="text-zinc-600">-</span>
@@ -317,7 +317,7 @@ export default function ArticlesPage() {
                       <td className="p-3 text-right">
                         <div className="flex justify-end gap-2">
                           <Link
-                            href={`/editor/${article.slug}`}
+                            href={`/editor/v1/${article.slug}`}
                             className="p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800 rounded transition-colors"
                             title="Edit"
                           >

@@ -14,12 +14,12 @@ interface Article {
     name?: string;
     title?: string;
   };
-  researchedBy?: {
+  createdAt?: string;
+  publishedAt?: string;
+  createdBy?: {
     name: string;
     email: string;
   };
-  publishedAt?: string;
-  createdAt?: string;
   tags?: string[];
   status: string;
 }
@@ -141,8 +141,8 @@ export default function Articles() {
                         {article.category?.title || "Uncategorized"}
                       </span>
                       <span className="text-zinc-500 text-xs font-medium">
-                        {article.researchedBy
-                          ? `${article.researchedBy.name}`
+                        {article.createdBy
+                          ? `${article.createdBy.name}`
                           : "Unknown"}
                       </span>
                     </div>
