@@ -1,9 +1,7 @@
-import React from "react";
-import connectDB from "@/database/connectDB";
-import { Article } from "@/models/v1/articleModelV1";
-import type { Metadata } from "next";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 // Client components for share and views
 import ViewsCounter from "./views-counter";
@@ -12,6 +10,7 @@ import CopyButton from "./copy-button";
 
 // Professional typography
 import { Inter } from "next/font/google";
+import { useParams } from "next/navigation";
 const inter = Inter({ subsets: ["latin"] });
 
 // Util: get optimized Cloudinary URL
@@ -36,67 +35,49 @@ function getOptimizedCloudinaryUrl(
   return `https://res.cloudinary.com/${cloudName}/image/upload/${transformations}/${publicId}`;
 }
 
-type ArticleDoc =
-  Awaited<ReturnType<typeof Article.findOne>> extends infer T
-    ? T extends null
-      ? never
-      : NonNullable<T>
-    : never;
+// Minimal shape of the article returned by /api/articles/v1/[slug]
+interface ArticleDoc {
+  _id: string;
+  title: string;
+  slug: string;
+  abstract?: string;
+  keywords?: string[];
+  status?: string;
+  category?: {
+    _id: string;
+    title: string;
+    description?: string;
+  } | null;
+  authors?: Array<{
+    name: string;
+    affiliation?: string;
+    email?: string;
+  }>;
+  sections?: any[];
+  references?: any[];
+  resources?: any[];
+  scratchPad?: string;
+  notes?: string;
+  createdBy?: {
+    _id: string;
+    name?: string;
+    email?: string;
+  } | null;
+  revisions?: any[];
+  persistentId?: string;
+  views?: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
-  await connectDB();
-  const { slug } = await params;
-  const article = await Article.findOne({ slug: slug }).lean();
-
-  if (!article) {
-    return {
-      title: "Article not found",
-    };
-  }
-
-  const primaryImagePublicId = findFirstImagePublicId(article);
-  const primaryImageUrl =
-    (primaryImagePublicId &&
-      getOptimizedCloudinaryUrl(primaryImagePublicId, {
-        width: 1200,
-        quality: 85,
-      })) ||
-    undefined;
-
-  const title = article.title;
-  const description = article.abstract || `Read: ${article.title}`;
-
-  return {
-    title: `${title} | Research Archive`,
-    description,
-    keywords: article.keywords,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      url: `${process.env.NEXT_PUBLIC_SITE_URL || ""}/articles/v1/${article.slug}`,
-      images: primaryImageUrl
-        ? [
-            {
-              url: primaryImageUrl,
-              width: 1200,
-              height: 630,
-              alt: article.title,
-            },
-          ]
-        : undefined,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: primaryImageUrl ? [primaryImageUrl] : undefined,
-    },
-  };
+function getBaseUrl(): string {
+  let base =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+  if (base.endsWith("/")) base = base.slice(0, -1);
+  return base;
 }
 
 function findFirstImagePublicId(article: any): string | null {
@@ -110,23 +91,80 @@ function findFirstImagePublicId(article: any): string | null {
   return null;
 }
 
-export default async function ArticlePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = await params;
-  await connectDB();
+export default function ArticlePage() {
+  const { slug } = useParams<{ slug: string }>();
+  const [article, setArticle] = useState<ArticleDoc | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const article = await Article.findOne({ slug: slug })
-    .populate("createdBy", "name email")
-    .populate("category", "title description")
-    .populate("references")
-    .lean();
+  useEffect(() => {
+    let cancelled = false;
 
-  if (!article) {
-    notFound();
+    async function load() {
+      if (!slug) {
+        setError("Missing article slug");
+        setArticle(null);
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/articles/v1/${encodeURIComponent(slug)}`);
+        const data = (await res.json()) as {
+          success: boolean;
+          article?: ArticleDoc;
+          message?: string;
+        };
+
+        if (!res.ok || !data.success || !data.article) {
+          if (!cancelled) {
+            setError(data.message || "Article not found");
+            setArticle(null);
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setArticle(data.article);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError("Failed to load article");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-neutral-400">
+        Loading article...
+      </div>
+    );
   }
+
+  if (error || !article) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-neutral-400">
+        {error || "Article not found"}
+      </div>
+    );
+  }
+
+  const keywords = (article.keywords ?? []) as string[];
+  const references = (article.references ?? []) as any[];
+  const resources = (article.resources ?? []) as any[];
 
   const refIndexMap = new Map<string, number>();
   (article.references || []).forEach((r: any, i: number) => {
@@ -136,6 +174,12 @@ export default async function ArticlePage({
   const created = new Date(article.createdAt);
   const updated = new Date(article.updatedAt);
   const authors = article.authors || [];
+
+  const baseForShare =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const shareUrl = `${baseForShare}/articles/v1/${article.slug}`;
 
   return (
     <div
@@ -250,13 +294,13 @@ export default async function ArticlePage({
             </div>
 
             {/* Keywords */}
-            {article.keywords?.length > 0 && (
+            {keywords.length > 0 && (
               <div className="mt-8 pt-6 border-t border-neutral-800">
                 <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
                   Keywords
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.keywords.map((keyword: string, index: number) => (
+                  {keywords.map((keyword: string, index: number) => (
                     <span
                       key={index}
                       className="px-3 py-1.5 text-sm rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors"
@@ -294,7 +338,7 @@ export default async function ArticlePage({
             <div className="flex items-center gap-3">
               <ShareMenu
                 title={article.title}
-                url={`${process.env.NEXT_PUBLIC_SITE_URL || ""}/articles/v2/${article.slug}`}
+                url={shareUrl}
                 abstract={article.abstract || ""}
               />
               <ViewsCounter
@@ -340,7 +384,7 @@ export default async function ArticlePage({
           </article>
 
           {/* References Section */}
-          {article.references?.length > 0 && (
+          {references.length > 0 && (
             <section className="mt-24 pt-16 border-t border-neutral-800">
               <div className="flex items-center gap-4 mb-10">
                 <div className="w-12 h-0.5 bg-emerald-500"></div>
@@ -348,7 +392,7 @@ export default async function ArticlePage({
               </div>
               <div className="bg-neutral-900/50 rounded-xl p-8 border border-neutral-800">
                 <ol className="space-y-6">
-                  {article.references.map((reference: any, index: number) => (
+                  {references.map((reference: any, index: number) => (
                     <li key={reference._id || index} className="relative pl-8">
                       <span className="absolute left-0 top-0 text-emerald-500 font-mono text-sm">
                         [{index + 1}]
@@ -364,7 +408,7 @@ export default async function ArticlePage({
           )}
 
           {/* Resources Section */}
-          {article.resources?.length > 0 && (
+          {resources.length > 0 && (
             <section className="mt-20">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-12 h-0.5 bg-blue-500"></div>
@@ -373,7 +417,7 @@ export default async function ArticlePage({
                 </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {article.resources.map((resource: any, index: number) => (
+                {resources.map((resource: any, index: number) => (
                   <ResourceCard
                     key={resource._id || index}
                     resource={resource}
