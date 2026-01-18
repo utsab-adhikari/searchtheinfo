@@ -24,6 +24,11 @@ import PageViewsChart from "@/components/administration/PageViewsChart";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Administration - Monitoring",
+  description: "System monitoring dashboard for API and database performance.",
+};
+
 async function getApiLatency(): Promise<AggregatedApiLatency[]> {
   await connectDB();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
