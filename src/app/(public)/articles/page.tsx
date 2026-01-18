@@ -138,7 +138,7 @@ export default function Articles() {
                   <div className="h-full bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 hover:bg-zinc-900/70 transition-all flex flex-col backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-4">
                       <span className="inline-block px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase">
-                        {getTag(article)}
+                        {article.category?.title || "Uncategorized"}
                       </span>
                       <span className="text-zinc-500 text-xs font-medium">
                         {article.researchedBy

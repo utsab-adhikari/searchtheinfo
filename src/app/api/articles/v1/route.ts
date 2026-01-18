@@ -113,15 +113,28 @@ async function handlePost(
   }
 }
 
-async function handleGet(): Promise<
-  NextResponse<ArticlesListResponse | ErrorResponse>
-> {
+async function handleGet(
+  req: NextRequest,
+): Promise<NextResponse<ArticlesListResponse | ErrorResponse>> {
   try {
     await connectDB();
 
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status");
+    const search = searchParams.get("search");
+
+    const query: Record<string, unknown> = {};
+    if (status && status !== "all") {
+      query.status = status;
+    }
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+
     const articles = await withDbTiming("articles-v1-list", () =>
-      Article.find()
-        .select("title slug status createdAt category")
+      Article.find(query)
+        .populate("category", "title slug")
+        .select("title slug status createdAt updatedAt views category")
         .sort({ createdAt: -1 })
         .lean<ArticleListItem[]>()
     );

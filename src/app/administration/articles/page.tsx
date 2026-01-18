@@ -55,18 +55,30 @@ export default function ArticlesPage() {
   const loadArticles = async () => {
     setLoading(true);
     try {
-      let url = `/api/articles/v1?`;
-      if (statusFilter !== "all") url += `status=${statusFilter}&`;
-      if (search) url += `search=${encodeURIComponent(search)}`;
-      
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (search) params.set("search", search);
+
+      const query = params.toString();
+      const url = `/api/articles/v1${query ? `?${query}` : ""}`;
+
       const res = await fetch(url);
       const data = await res.json();
-      setArticles(data.data || []);
 
-      const total = data.data?.length || 0;
-      const published = data.data?.filter((a: Article) => a.status === "published").length || 0;
-      const draft = data.data?.filter((a: Article) => a.status === "draft").length || 0;
-      const archived = data.data?.filter((a: Article) => a.status === "archived").length || 0;
+      if (!data.success) {
+        toast.error(data.message || "Failed to load articles");
+        setArticles([]);
+        setStats({ total: 0, published: 0, draft: 0, archived: 0 });
+        return;
+      }
+
+      const list: Article[] = data.articles || [];
+      setArticles(list);
+
+      const total = list.length;
+      const published = list.filter((a) => a.status === "published").length;
+      const draft = list.filter((a) => a.status === "draft").length;
+      const archived = list.filter((a) => a.status === "archived").length;
       setStats({ total, published, draft, archived });
     } catch (error) {
       toast.error("Failed to load articles");

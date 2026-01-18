@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/database/connectDB";
+import Category from "@/models/categoryModel";
 import { Article, Reference } from "@/models/v1/articleModelV1"; 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -166,6 +167,7 @@ async function getArticle(
     const article = await withDbTiming("articles-v1-get-by-slug", () =>
       Article.findOne({ slug })
         .populate("createdBy", "name email")
+        .populate("category", "title description")
         .populate("references")
         .lean<ArticleWithPopulated>()
     );
