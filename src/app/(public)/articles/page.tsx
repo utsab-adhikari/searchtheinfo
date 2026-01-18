@@ -132,7 +132,7 @@ export default function Articles() {
               {articles.map((article) => (
                 <Link
                   key={article._id}
-                  href={`/articles/${article.slug}`}
+                  href={`/articles/v1/${article.slug}`}
                   className="group h-full"
                 >
                   <div className="h-full bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 hover:bg-zinc-900/70 transition-all flex flex-col backdrop-blur-sm">
