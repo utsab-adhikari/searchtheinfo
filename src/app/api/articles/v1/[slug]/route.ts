@@ -167,7 +167,11 @@ async function getArticle(
     const article = await withDbTiming("articles-v1-get-by-slug", () =>
       Article.findOne({ slug })
         .populate("createdBy", "name email")
-        .populate("category", "title description")
+        .populate({
+          path: "category",
+          select: "title description",
+          model: Category,
+        })
         .populate("references")
         .lean<ArticleWithPopulated>()
     );

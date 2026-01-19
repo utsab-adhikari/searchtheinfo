@@ -48,10 +48,10 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
       <div className="sm:hidden">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 dark:hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title="Share article"
         >
-          <FiShare2 className="w-5 h-5 text-zinc-300" />
+          <FiShare2 className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
         </button>
         
         {showMenu && (
@@ -60,13 +60,13 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
               className="fixed inset-0 z-10" 
               onClick={() => setShowMenu(false)}
             />
-            <div className="absolute right-0 mt-2 w-48 rounded-lg border border-zinc-700 bg-zinc-800 shadow-lg z-20 overflow-hidden">
+            <div className="absolute right-0 mt-2 w-48 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg z-20 overflow-hidden">
               <button
                 onClick={() => {
                   handleNativeShare();
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700 transition-colors text-sm text-zinc-300"
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm text-zinc-700 dark:text-zinc-300"
               >
                 <FiShare2 className="w-4 h-4" />
                 <span>Share</span>
@@ -76,7 +76,7 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowMenu(false)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700 transition-colors text-sm text-zinc-300"
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm text-zinc-700 dark:text-zinc-300"
               >
                 <FaXTwitter className="w-4 h-4" />
                 <span>Twitter</span>
@@ -86,7 +86,7 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setShowMenu(false)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700 transition-colors text-sm text-zinc-300"
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm text-zinc-700 dark:text-zinc-300"
               >
                 <FaLinkedinIn className="w-4 h-4" />
                 <span>LinkedIn</span>
@@ -94,7 +94,7 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
               <a
                 href={mailtoUrl}
                 onClick={() => setShowMenu(false)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700 transition-colors text-sm text-zinc-300"
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm text-zinc-700 dark:text-zinc-300"
               >
                 <FiMail className="w-4 h-4" />
                 <span>Email</span>
@@ -104,7 +104,7 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
                   copyLink();
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-700 transition-colors text-sm text-zinc-300"
+                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm text-zinc-700 dark:text-zinc-300"
               >
                 {copied ? <FiCheck className="w-4 h-4 text-emerald-600" /> : <FiCopy className="w-4 h-4" />}
                 <span>{copied ? "Copied!" : "Copy Link"}</span>
@@ -118,45 +118,45 @@ export default function ShareMenu({ title, url, abstract }: { title: string; url
       <div className="hidden sm:flex items-center gap-2">
         <button
           onClick={handleNativeShare}
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title="Share"
         >
-          <FiShare2 className="w-4 h-4 text-zinc-300" />
+          <FiShare2 className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
         </button>
         <a
           href={tweetUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title="Share on Twitter"
         >
-          <FaXTwitter className="w-4 h-4 text-zinc-300" />
+          <FaXTwitter className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
         </a>
         <a
           href={linkedinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title="Share on LinkedIn"
         >
-          <FaLinkedinIn className="w-4 h-4 text-zinc-300" />
+          <FaLinkedinIn className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
         </a>
         <a
           href={mailtoUrl}
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title="Share via Email"
         >
-          <FiMail className="w-4 h-4 text-zinc-300" />
+          <FiMail className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
         </a>
         <button
           onClick={copyLink}
-          className="p-2 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 transition-colors"
+          className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
           title={copied ? "Copied!" : "Copy link"}
         >
           {copied ? (
-            <FiCheck className="w-4 h-4 text-emerald-400" />
+            <FiCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <FiCopy className="w-4 h-4 text-zinc-300" />
+            <FiCopy className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
           )}
         </button>
       </div>

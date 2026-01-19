@@ -11,7 +11,18 @@ import CopyButton from "./copy-button";
 // Professional typography
 import { Inter } from "next/font/google";
 import { useParams } from "next/navigation";
+import { Sun } from "lucide-react";
 const inter = Inter({ subsets: ["latin"] });
+
+// Util: slugify (to match v2 layout behavior)
+function slugify(input: string) {
+  return (input || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 // Util: get optimized Cloudinary URL
 function getOptimizedCloudinaryUrl(
@@ -47,6 +58,7 @@ interface ArticleDoc {
     _id: string;
     title: string;
     description?: string;
+    slug?: string;
   } | null;
   authors?: Array<{
     name: string;
@@ -175,6 +187,15 @@ export default function ArticlePage() {
   const updated = new Date(article.updatedAt);
   const authors = article.authors || [];
 
+  const categoryTitle =
+    article.category && typeof article.category === "object"
+      ? article.category.title
+      : null;
+  const categorySlug =
+    article.category && typeof article.category === "object"
+      ? article.category.slug || slugify(article.category.title || "")
+      : null;
+
   const baseForShare =
     typeof window !== "undefined"
       ? window.location.origin
@@ -186,76 +207,57 @@ export default function ArticlePage() {
       className={`${inter.className} min-h-screen bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] text-neutral-100`}
     >
       <div className="relative z-10">
-        {/* Article Header */}
-        <header className="">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-neutral-500">
-              <ol className="flex items-center space-x-2">
-                <li>
-                  <Link
-                    href="/"
-                    className="hover:text-neutral-300 transition-colors"
-                  >
-                    Home
-                  </Link>
-                </li>
-                <li className="text-neutral-600">/</li>
-                <li>
-                  <Link
-                    href="/articles"
-                    className="hover:text-neutral-300 transition-colors"
-                  >
-                    Articles
-                  </Link>
-                </li>
-                <li className="text-neutral-600">/</li>
-                <li className="text-neutral-300 truncate">{article.title}</li>
-              </ol>
-            </nav>
+        <header className="relative">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            {/* Category badge */}
+            {categoryTitle && (
+              <div className="mb-4">
+                <Link
+                  href={`/categories/${categorySlug || slugify(categoryTitle)}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 transition-colors text-xs font-medium uppercase tracking-wide border border-emerald-500/30"
+                >
+                  {categoryTitle}
+                </Link>
+              </div>
+            )}
 
-            {/* Article Title */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-tight mb-6">
+            {/* Title */}
+            <h1 className="font-serif font-bold tracking-tight text-white leading-[1.15] text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-6">
               {article.title}
             </h1>
 
-            {/* Authors */}
+            {/* Authors (layout mirrored from v2) */}
             {authors.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
-                  Authors
-                </h2>
-                <div className="flex flex-wrap gap-4">
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-x-6 gap-y-3">
                   {authors.map((author: any, index: number) => (
-                    <div key={index} className="group">
-                      <div className="text-lg font-medium text-neutral-200 group-hover:text-white transition-colors">
-                        {author.name}
+                    <div key={index} className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-full bg-neutral-900 flex items-center justify-center text-neutral-300 text-sm font-medium flex-shrink-0">
+                        {author?.name?.charAt(0).toUpperCase()}
                       </div>
-                      {author.affiliation && (
-                        <div className="text-sm text-neutral-400">
-                          {author.affiliation}
+                      <div>
+                        <div className="text-sm font-semibold text-neutral-100">
+                          {author?.name}
                         </div>
-                      )}
-                      {author.email && (
-                        <a
-                          href={`mailto:${author.email}`}
-                          className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors"
-                        >
-                          {author.email}
-                        </a>
-                      )}
+                        {author?.affiliation && (
+                          <div className="text-xs text-neutral-400">
+                            {author.affiliation}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Meta Information */}
-            <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-400">
-              <div className="flex items-center gap-2">
+            {/* Metadata + view toggle + share/views (mirrors v2 structure) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-400 border-t border-b border-neutral-800 py-3">
+              <div className="flex items-center gap-1.5">
                 <CalendarIcon className="w-4 h-4" />
                 <span>
-                  Published{" "}
+                  Published
+                  {" "}
                   {created.toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
@@ -263,52 +265,65 @@ export default function ArticlePage() {
                   })}
                 </span>
               </div>
+
               {updated.getTime() !== created.getTime() && (
-                <div className="flex items-center gap-2">
-                  <UpdateIcon className="w-4 h-4" />
-                  <span>
-                    Updated{" "}
-                    {updated.toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                <>
+                  <span className="text-neutral-600">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <UpdateIcon className="w-4 h-4" />
+                    <span>
+                      Updated
+                      {" "}
+                      {updated.toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {article.persistentId && (
+                <>
+                  <span className="text-neutral-600">•</span>
+                  <span className="font-mono text-xs text-neutral-300">
+                    DOI: {article.persistentId}
                   </span>
-                </div>
+                </>
               )}
-              {article.category && (
+
+              <div className="ml-auto flex items-center gap-2">
                 <Link
-                  href={`/categories/${article.category.title}`}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20"
+                  href={`/articles/v2/${article.slug}`}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900/70 text-neutral-100 hover:bg-neutral-800 transition-colors border border-neutral-700 text-xs font-medium"
                 >
-                  <CategoryIcon className="w-4 h-4" />
-                  {article.category.title}
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span>Light view</span>
                 </Link>
-              )}
-              {article.status === "published" && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                  Published
-                </div>
-              )}
+                <ShareMenu
+                  title={article.title}
+                  url={shareUrl}
+                  abstract={article.abstract || ""}
+                />
+                <ViewsCounter
+                  slug={article.slug}
+                  initialViews={article.views || 0}
+                />
+              </div>
             </div>
 
             {/* Keywords */}
             {keywords.length > 0 && (
-              <div className="mt-8 pt-6 border-t border-neutral-800">
-                <h3 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-3">
-                  Keywords
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((keyword: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1.5 text-sm rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition-colors"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {keywords.map((keyword: string, index: number) => (
+                  <span
+                    key={index}
+                    className="text-xs px-2.5 py-1 rounded-md bg-neutral-900/70 text-neutral-200 hover:bg-neutral-800 transition-colors"
+                  >
+                    {keyword}
+                  </span>
+                ))}
               </div>
             )}
           </div>
@@ -331,121 +346,120 @@ export default function ArticlePage() {
           </section>
         )}
 
-        {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Article Actions */}
-          <div className="sticky top-4 z-20 mb-12 flex justify-end">
-            <div className="flex items-center gap-3">
-              <ShareMenu
-                title={article.title}
-                url={shareUrl}
-                abstract={article.abstract || ""}
-              />
-              <ViewsCounter
-                slug={article.slug}
-                initialViews={article.views || 0}
-              />
-            </div>
-          </div>
-
-          {/* Table of Contents (Optional - can be hidden) */}
-          <div className="mb-12 hidden lg:block">
-            <div className="bg-neutral-900/50 rounded-lg p-6 border border-neutral-800">
-              <h3 className="text-lg font-semibold text-white mb-4">
-                Contents
-              </h3>
-              <nav className="space-y-2">
-                {article.sections?.map((section: any, index: number) => (
-                  <a
-                    key={section._id || index}
-                    href={`#section-${section._id || index}`}
-                    className="block text-neutral-400 hover:text-white transition-colors py-1"
-                  >
-                    {section.title}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          </div>
-
-          {/* Sections */}
-          <article className="prose prose-lg prose-invert max-w-none">
-            <div className="space-y-16">
-              {article.sections?.map((section: any, sectionIndex: number) => (
-                <SectionRenderer
-                  key={section._id || sectionIndex}
-                  section={section}
-                  depth={1}
-                  refIndexMap={refIndexMap}
-                  sectionIndex={sectionIndex}
-                />
-              ))}
-            </div>
-          </article>
-
-          {/* References Section */}
-          {references.length > 0 && (
-            <section className="mt-24 pt-16 border-t border-neutral-800">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-0.5 bg-emerald-500"></div>
-                <h2 className="text-3xl font-bold text-white">References</h2>
-              </div>
-              <div className="bg-neutral-900/50 rounded-xl p-8 border border-neutral-800">
-                <ol className="space-y-6">
-                  {references.map((reference: any, index: number) => (
-                    <li key={reference._id || index} className="relative pl-8">
-                      <span className="absolute left-0 top-0 text-emerald-500 font-mono text-sm">
-                        [{index + 1}]
-                      </span>
-                      <div className="text-neutral-300 leading-relaxed">
-                        <ReferenceItem reference={reference} />
-                      </div>
-                    </li>
+        {/* Main Content (aligned to v2 layout, dark theme) */}
+        <main className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,780px)_280px] gap-12">
+            {/* Article content */}
+            <div>
+              {/* Sections */}
+              {article.sections?.length ? (
+                <article className="space-y-12">
+                  {article.sections.map((section: any, sectionIndex: number) => (
+                    <SectionRenderer
+                      key={section._id || sectionIndex}
+                      section={section}
+                      depth={1}
+                      refIndexMap={refIndexMap}
+                      sectionIndex={sectionIndex}
+                    />
                   ))}
-                </ol>
-              </div>
-            </section>
-          )}
-
-          {/* Resources Section */}
-          {resources.length > 0 && (
-            <section className="mt-20">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-0.5 bg-blue-500"></div>
-                <h2 className="text-2xl font-bold text-white">
-                  Additional Resources
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {resources.map((resource: any, index: number) => (
-                  <ResourceCard
-                    key={resource._id || index}
-                    resource={resource}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Article Footer */}
-          <footer className="mt-24 pt-12 border-t border-neutral-800">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Article Information
-                </h3>
-                <div className="text-sm text-neutral-400 space-y-1">
-                  <div>DOI: {article.persistentId || "Not assigned"}</div>
-                  <div>Created by: {article.createdBy?.name || "Unknown"}</div>
-                  <div>Revision count: {article.revisions?.length || 0}</div>
+                </article>
+              ) : (
+                <div className="text-center text-neutral-500 py-12">
+                  No content sections.
                 </div>
-              </div>
-              <div className="text-sm text-neutral-500">
-                © {new Date().getFullYear()} Research Archive. All rights
-                reserved.
-              </div>
+              )}
+
+              {/* References Section */}
+              {references.length > 0 && (
+                <section className="mt-24 pt-16 border-t border-neutral-800">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-12 h-0.5 bg-emerald-500"></div>
+                    <h2 className="text-3xl font-bold text-white">References</h2>
+                  </div>
+                  <div className="bg-neutral-900/50 rounded-xl p-8 border border-neutral-800">
+                    <ol className="space-y-6">
+                      {references.map((reference: any, index: number) => (
+                        <li key={reference._id || index} className="relative pl-8">
+                          <span className="absolute left-0 top-0 text-emerald-500 font-mono text-sm">
+                            [{index + 1}]
+                          </span>
+                          <div className="text-neutral-300 leading-relaxed">
+                            <ReferenceItem reference={reference} />
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                </section>
+              )}
+
+              {/* Resources Section */}
+              {resources.length > 0 && (
+                <section className="mt-20">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-0.5 bg-blue-500"></div>
+                    <h2 className="text-2xl font-bold text-white">
+                      Additional Resources
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {resources.map((resource: any, index: number) => (
+                      <ResourceCard
+                        key={resource._id || index}
+                        resource={resource}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Article Footer */}
+              <footer className="mt-24 pt-12 border-t border-neutral-800">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">
+                      Article Information
+                    </h3>
+                    <div className="text-sm text-neutral-400 space-y-1">
+                      <div>DOI: {article.persistentId || "Not assigned"}</div>
+                      <div>Created by: {article.createdBy?.name || "Unknown"}</div>
+                      <div>Revision count: {article.revisions?.length || 0}</div>
+                    </div>
+                  </div>
+                  <div className="text-sm text-neutral-500">
+                    © {new Date().getFullYear()} Research Archive. All rights
+                    reserved.
+                  </div>
+                </div>
+              </footer>
             </div>
-          </footer>
+
+            {/* Right sticky ToC (dark theme) */}
+            <aside className="hidden lg:block">
+              {article.sections?.length ? (
+                <nav className="sticky top-24">
+                  <div className="border border-neutral-800 rounded-lg bg-neutral-900/70 p-5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">
+                      Contents
+                    </p>
+                    <ul className="space-y-2.5 text-sm">
+                      {article.sections.map((section: any, index: number) => (
+                        <li key={section._id || index}>
+                          <a
+                            href={`#section-${section._id || index}`}
+                            className="text-neutral-300 hover:text-white transition-colors font-medium block"
+                          >
+                            {section.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </nav>
+              ) : null}
+            </aside>
+          </div>
         </main>
       </div>
     </div>

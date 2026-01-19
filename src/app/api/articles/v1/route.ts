@@ -133,7 +133,11 @@ async function handleGet(
 
     const articles = await withDbTiming("articles-v1-list", () =>
       Article.find(query)
-        .populate("category", "title slug")
+        .populate({
+                  path: "category",
+                  select: "title description",
+                  model: Category,
+                })
         .populate("createdBy", "name email")
         .select("title slug status createdAt updatedAt views category")
         .sort({ createdAt: -1 })

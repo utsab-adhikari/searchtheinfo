@@ -9,7 +9,7 @@ interface Article {
   _id: string;
   title: string;
   slug: string;
-  excerpt?: string;
+  abstract?: string;
   category?: {
     name?: string;
     title?: string;
@@ -22,6 +22,13 @@ interface Article {
   };
   tags?: string[];
   status: string;
+}
+
+interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
 }
 
 export default function Articles() {
@@ -129,41 +136,45 @@ export default function Articles() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-8">
-              {articles.map((article) => (
-                <Link
-                  key={article._id}
-                  href={`/articles/v1/${article.slug}`}
-                  className="group h-full"
-                >
-                  <div className="h-full bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 hover:bg-zinc-900/70 transition-all flex flex-col backdrop-blur-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="inline-block px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase">
-                        {article.category?.title || "Uncategorized"}
-                      </span>
-                      <span className="text-zinc-500 text-xs font-medium">
-                        {article.createdBy
-                          ? `${article.createdBy.name}`
-                          : "Unknown"}
-                      </span>
+              {articles
+                .filter((article) => article.status === "published")
+                .map((article) => (
+                  <Link
+                    key={article._id}
+                    href={`/articles/v1/${article.slug}`}
+                    className="group h-full"
+                  >
+                    <div className="h-full bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 hover:border-emerald-500/50 hover:bg-zinc-900/70 transition-all flex flex-col backdrop-blur-sm">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="inline-block px-3 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase">
+                          {article.category?.title || "Uncategorized"}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-semibold text-zinc-100 mb-3 group-hover:text-emerald-300 transition-colors leading-tight">
+                        {article.title}
+                      </h3>
+
+                      <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 flex-grow line-clamp-3">
+                        {article.abstract ||
+                          "No excerpt available for this article."}
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs text-zinc-500 border-t border-zinc-800 pt-4 w-full mt-auto">
+                        <span>
+                          {formatDate(
+                            article.publishedAt || article.createdAt,
+                          )}
+                        </span>
+                        <span className="text-zinc-500 text-xs font-medium">
+                          {article.createdBy
+                            ? `${article.createdBy.name}`
+                            : "Unknown"}
+                        </span>
+                      </div>
                     </div>
-
-                    <h3 className="text-lg sm:text-xl font-semibold text-zinc-100 mb-3 group-hover:text-emerald-300 transition-colors leading-tight">
-                      {article.title}
-                    </h3>
-
-                    <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 flex-grow line-clamp-3">
-                      {article.excerpt ||
-                        "No excerpt available for this article."}
-                    </p>
-
-                    <div className="flex items-center text-xs text-zinc-500 border-t border-zinc-800 pt-4 w-full mt-auto">
-                      <span>
-                        {formatDate(article.publishedAt || article.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
             </div>
           )}
         </section>
