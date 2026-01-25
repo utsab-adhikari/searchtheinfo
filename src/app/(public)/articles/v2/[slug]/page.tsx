@@ -8,6 +8,7 @@ import { Moon } from "lucide-react";
 // Client components
 import ViewsCounter from "./views-counter";
 import ShareMenu from "./share-menu";
+import CopyButton from "./copy-button";
 
 // --------- Utils ---------
 function slugify(input: string) {
@@ -664,18 +665,21 @@ function BlockRenderer({
 
     case "code":
       return (
-        <div className="my-8">
+        <div className="my-8 overflow-hidden rounded-lg border border-gray-300 bg-gray-50">
           {block.codeLanguage && (
-            <div className="bg-gray-100 border border-gray-300 border-b-0 rounded-t-lg px-4 py-2 text-xs font-mono text-gray-700 font-semibold">
-              {block.codeLanguage}
+            <div className="px-4 py-2 bg-gray-100 border-b border-gray-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono text-gray-700 font-semibold">
+                  {block.codeLanguage}
+                </span>
+                <CopyButton text={block.text || ""} />
+              </div>
             </div>
           )}
-          <pre
-            className={`bg-gray-50 border border-gray-300 text-gray-900 text-sm font-mono p-5 overflow-x-auto ${
-              block.codeLanguage ? "rounded-b-lg" : "rounded-lg"
-            }`}
-          >
-            <code className="whitespace-pre break-words">{block.text}</code>
+          <pre className="p-5 overflow-x-auto">
+            <code className="text-sm font-mono text-gray-900 whitespace-pre break-words">
+              {block.text}
+            </code>
           </pre>
         </div>
       );
