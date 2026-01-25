@@ -156,8 +156,7 @@ export default function Articles() {
                       </h3>
 
                       <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6 flex-grow line-clamp-3">
-                        {article.abstract ||
-                          "No excerpt available for this article."}
+                        {article?.abstract}
                       </p>
 
                       <div className="flex items-center justify-between text-xs text-zinc-500 border-t border-zinc-800 pt-4 w-full mt-auto">

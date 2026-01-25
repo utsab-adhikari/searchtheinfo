@@ -139,7 +139,7 @@ async function handleGet(
                   model: Category,
                 })
         .populate("createdBy", "name email")
-        .select("title slug status createdAt updatedAt views category")
+        .select("title abstract slug status createdAt updatedAt views category")
         .sort({ createdAt: -1 })
         .lean<ArticleListItem[]>()
     );
