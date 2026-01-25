@@ -24,6 +24,12 @@ function slugify(input: string) {
     .replace(/-+/g, "-");
 }
 
+function sectionId(section: any) {
+  const base = slugify(section?.title || "section");
+  const suffix = section?._id ? String(section._id) : "";
+  return suffix ? `${base}-${suffix}` : base;
+}
+
 // Util: get optimized Cloudinary URL
 function getOptimizedCloudinaryUrl(
   publicId: string,
@@ -202,6 +208,26 @@ export default function ArticlePage() {
       : (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
   const shareUrl = `${baseForShare}/articles/v1/${article.slug}`;
 
+  // Build ToC similar to v2 (with subtopics)
+  const toc:
+    | false
+    | Array<{
+        title: string;
+        id: string;
+        children?: Array<{ title: string; id: string }>;
+      }> =
+    Array.isArray(article.sections) &&
+    article.sections.map((s: any) => ({
+      title: s.title,
+      id: sectionId(s),
+      children:
+        Array.isArray(s.children) &&
+        s.children.map((c: any) => ({
+          title: c.title,
+          id: sectionId(c),
+        })),
+    }));
+
   return (
     <div
       className={`${inter.className} min-h-screen bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] text-neutral-100`}
@@ -360,7 +386,6 @@ export default function ArticlePage() {
                       section={section}
                       depth={1}
                       refIndexMap={refIndexMap}
-                      sectionIndex={sectionIndex}
                     />
                   ))}
                 </article>
@@ -370,45 +395,76 @@ export default function ArticlePage() {
                 </div>
               )}
 
-              {/* References Section */}
+              {/* References Section (aligned to v2, dark theme) */}
               {references.length > 0 && (
-                <section className="mt-24 pt-16 border-t border-neutral-800">
-                  <div className="flex items-center gap-4 mb-10">
-                    <div className="w-12 h-0.5 bg-emerald-500"></div>
-                    <h2 className="text-3xl font-bold text-white">References</h2>
-                  </div>
-                  <div className="bg-neutral-900/50 rounded-xl p-8 border border-neutral-800">
-                    <ol className="space-y-6">
-                      {references.map((reference: any, index: number) => (
-                        <li key={reference._id || index} className="relative pl-8">
-                          <span className="absolute left-0 top-0 text-emerald-500 font-mono text-sm">
-                            [{index + 1}]
-                          </span>
-                          <div className="text-neutral-300 leading-relaxed">
-                            <ReferenceItem reference={reference} />
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                <section className="mt-16 pt-12 border-t-2 border-neutral-800">
+                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-8 font-serif">
+                    References
+                  </h3>
+                  <ol className="space-y-4">
+                    {references.map((r: any, i: number) => (
+                      <li
+                        key={r._id || i}
+                        id={`ref-${i + 1}`}
+                        className="flex gap-4 text-sm md:text-base scroll-mt-28"
+                      >
+                        <span className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded bg-neutral-900 text-neutral-200 font-semibold text-xs border border-neutral-700">
+                          {i + 1}
+                        </span>
+                        <div className="flex-1 text-neutral-200 leading-relaxed break-words">
+                          <ReferenceLine r={r} index={i + 1} />
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
                 </section>
               )}
 
-              {/* Resources Section */}
+              {/* Resources Section (dark theme, same UI flow as v2) */}
               {resources.length > 0 && (
-                <section className="mt-20">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-0.5 bg-blue-500"></div>
-                    <h2 className="text-2xl font-bold text-white">
+                <section className="mt-12">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 font-serif">
                       Additional Resources
                     </h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {resources.map((resource: any, index: number) => (
-                      <ResourceCard
-                        key={resource._id || index}
-                        resource={resource}
-                      />
+                  <div className="space-y-3">
+                    {resources.map((r: any, i: number) => (
+                      <div
+                        key={r._id || i}
+                        className="border border-neutral-800 rounded-lg p-5 bg-neutral-900/60 hover:border-neutral-700 hover:shadow-lg transition-all group"
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <span className="px-2.5 py-1 rounded bg-emerald-500/10 text-emerald-300 text-[11px] font-semibold uppercase tracking-wide border border-emerald-500/30">
+                            {r.type}
+                          </span>
+                          {r.url && (
+                            <a
+                              href={r.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-neutral-300 hover:text-white transition-colors p-1.5 rounded-md hover:bg-neutral-800"
+                              title="Visit resource"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                        <h4 className="font-semibold text-white group-hover:text-emerald-300 transition-colors mb-1">
+                          {r.title}
+                        </h4>
+                        {r.author && (
+                          <p className="text-sm text-neutral-400 mb-2">by {r.author}</p>
+                        )}
+                        {r.description && (
+                          <p className="text-sm text-neutral-300 line-clamp-2">{r.description}</p>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </section>
@@ -435,29 +491,43 @@ export default function ArticlePage() {
               </footer>
             </div>
 
-            {/* Right sticky ToC (dark theme) */}
+            {/* Right sticky ToC (dark theme with subtopics like v2) */}
             <aside className="hidden lg:block">
-              {article.sections?.length ? (
+              {toc && toc.length > 0 && (
                 <nav className="sticky top-24">
                   <div className="border border-neutral-800 rounded-lg bg-neutral-900/70 p-5">
                     <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-4">
                       Contents
                     </p>
                     <ul className="space-y-2.5 text-sm">
-                      {article.sections.map((section: any, index: number) => (
-                        <li key={section._id || index}>
+                      {toc.map((t: any) => (
+                        <li key={t.id}>
                           <a
-                            href={`#section-${section._id || index}`}
-                            className="text-neutral-300 hover:text-white transition-colors font-medium block"
+                            href={`#${t.id}`}
+                            className="text-neutral-200 hover:text-emerald-300 transition-colors font-medium block"
                           >
-                            {section.title}
+                            {t.title}
                           </a>
+                          {t.children && t.children.length > 0 && (
+                            <ul className="mt-2 ml-3 space-y-2 border-l-2 border-neutral-800 pl-3">
+                              {t.children.map((c: any) => (
+                                <li key={c.id}>
+                                  <a
+                                    href={`#${c.id}`}
+                                    className="text-neutral-400 hover:text-emerald-300 transition-colors block text-sm"
+                                  >
+                                    {c.title}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </li>
                       ))}
                     </ul>
                   </div>
                 </nav>
-              ) : null}
+              )}
             </aside>
           </div>
         </main>
@@ -566,41 +636,57 @@ function AbstractIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-// Recursive Section Renderer (without numbering in titles)
+// Recursive Section Renderer (aligned structurally with v2, dark theme)
 function SectionRenderer({
   section,
   depth,
   refIndexMap,
-  sectionIndex,
 }: {
   section: any;
   depth: number;
   refIndexMap: Map<string, number>;
-  sectionIndex: number;
 }) {
-  const HeadingTag = depth === 1 ? "h2" : depth === 2 ? "h3" : "h4";
+  const HeadingTag =
+    depth === 1
+      ? "h2"
+      : depth === 2
+        ? "h3"
+        : depth === 3
+          ? "h4"
+          : depth === 4
+            ? "h5"
+            : "h6";
 
-  const headingStyles = {
-    1: "text-2xl md:text-3xl font-bold text-white mb-8 pb-4 border-b border-neutral-800",
-    2: "text-xl md:text-2xl font-semibold text-white mb-6 mt-12",
-    3: "text-lg md:text-xl font-semibold text-white mb-4 mt-8",
+  const headingSizes: Record<number, string> = {
+    1: "text-2xl sm:text-3xl md:text-4xl",
+    2: "text-xl sm:text-2xl md:text-3xl",
+    3: "text-lg sm:text-xl md:text-2xl",
+    4: "text-base sm:text-lg md:text-xl",
   };
 
-  const headingStyle =
-    headingStyles[depth as keyof typeof headingStyles] ||
-    "text-base font-semibold text-white mb-4";
+  const headingSize = headingSizes[depth] || "text-base";
+  const mt = depth === 1 ? "" : depth === 2 ? "mt-10" : depth === 3 ? "mt-8" : "mt-6";
+  const id = sectionId(section);
 
   return (
-    <section
-      id={`section-${section._id || sectionIndex}`}
-      className={`scroll-mt-20 ${depth > 1 ? "pl-4 md:pl-6" : ""}`}
-    >
+    <section className={`${mt} scroll-mt-28`} id={id}>
       {section.title && (
-        <HeadingTag className={headingStyle}>{section.title}</HeadingTag>
+        <HeadingTag
+          className={`${headingSize} font-bold text-white tracking-tight flex items-baseline gap-2 group font-serif leading-[1.2]`}
+        >
+          <span>{section.title}</span>
+          <a
+            href={`#${id}`}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 hover:text-emerald-400"
+            aria-label="Anchor link to this section"
+          >
+            #
+          </a>
+        </HeadingTag>
       )}
 
       {/* Section Content Blocks */}
-      <div className="space-y-8">
+      <div className="mt-5 space-y-6">
         {section.blocks?.map((block: any, blockIndex: number) => (
           <BlockRenderer
             key={block._id || blockIndex}
@@ -612,14 +698,13 @@ function SectionRenderer({
 
       {/* Recursive Children Sections */}
       {section.children?.length > 0 && (
-        <div className="mt-10 space-y-14">
+        <div className="mt-8 space-y-8 border-l-2 border-neutral-800 pl-6">
           {section.children.map((child: any, childIndex: number) => (
             <SectionRenderer
               key={child._id || childIndex}
               section={child}
-              depth={depth + 1}
+              depth={Math.min(depth + 1, 5)}
               refIndexMap={refIndexMap}
-              sectionIndex={childIndex}
             />
           ))}
         </div>
@@ -708,21 +793,15 @@ function BlockRenderer({
       );
 
     case "list":
-      const ListTag = block.listItems?.[0]?.startsWith("-") ? "ul" : "ol";
-      const listStyle = ListTag === "ul" ? "list-disc" : "list-decimal";
-
       return (
-        <div className="my-8">
-          <ListTag className={`${listStyle} list-outside ml-6 space-y-3`}>
-            {(block.listItems || []).map((item: string, index: number) => (
-              <li
-                key={index}
-                className="text-lg text-neutral-300 pl-2 leading-relaxed"
-              >
-                {item.replace(/^- /, "")}
+        <div>
+          <ul className="list-disc list-outside ml-6 text-base md:text-lg leading-relaxed text-neutral-200 space-y-2 marker:text-neutral-500 font-serif">
+            {(block.listItems || []).map((li: string, i: number) => (
+              <li key={i} className="pl-1">
+                {li.replace(/^- /, "")}
               </li>
             ))}
-          </ListTag>
+          </ul>
           <CitationSup />
         </div>
       );
@@ -744,19 +823,19 @@ function BlockRenderer({
 
     case "code":
       return (
-        <div className="my-10 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/50">
+        <div className="my-8 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/60">
           {block.codeLanguage && (
-            <div className="px-6 py-3 bg-neutral-900 border-b border-neutral-800">
+            <div className="px-4 py-2 bg-neutral-950/70 border-b border-neutral-800">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-mono text-emerald-400">
+                <span className="text-xs font-mono text-emerald-300 font-semibold">
                   {block.codeLanguage}
                 </span>
                 <CopyButton text={block.text || ""} />
               </div>
             </div>
           )}
-          <pre className="p-6 overflow-x-auto">
-            <code className="text-sm font-mono text-neutral-300 whitespace-pre">
+          <pre className="p-5 overflow-x-auto">
+            <code className="text-sm font-mono text-neutral-100 whitespace-pre break-words">
               {block.text}
             </code>
           </pre>
@@ -778,113 +857,35 @@ function BlockRenderer({
   }
 }
 
-// Reference Item Component
-function ReferenceItem({ reference }: { reference: any }) {
-  return (
-    <div className="hover:bg-neutral-800/30 rounded-lg p-3 transition-colors">
-      <div className="font-medium text-white mb-1">{reference.title}</div>
-      <div className="text-sm text-neutral-400 mb-2">
-        {reference.authors && <span>{reference.authors}. </span>}
-        {reference.journal && <em>{reference.journal}</em>}
-        {reference.year && <span> ({reference.year})</span>}
-        {reference.volume && <span>, {reference.volume}</span>}
-        {reference.issue && <span>({reference.issue})</span>}
-        {reference.pages && <span>: {reference.pages}</span>}
-      </div>
-      {(reference.doi || reference.url) && (
-        <div className="text-sm space-x-4">
-          {reference.doi && (
-            <a
-              href={`https://doi.org/${reference.doi}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-500 hover:text-emerald-400 transition-colors"
-            >
-              DOI: {reference.doi}
-            </a>
-          )}
-          {reference.url && (
-            <a
-              href={reference.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-400 transition-colors"
-            >
-              View Source
-            </a>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Resource Card Component
-function ResourceCard({ resource }: { resource: any }) {
-  const typeColors: Record<string, string> = {
-    book: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-    website: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    youtube: "bg-red-500/10 text-red-400 border-red-500/20",
-    paper: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    course: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    other: "bg-neutral-500/10 text-neutral-400 border-neutral-500/20",
-  };
-
-  const typeIcons: Record<string, string> = {
-    book: "📚",
-    website: "🌐",
-    youtube: "🎬",
-    paper: "📄",
-    course: "🎓",
-    other: "📎",
-  };
+// Reference line component (mirrors v2 structure, dark theme)
+function ReferenceLine({ r, index }: { r: any; index: number }) {
+  const year = r.year ? ` (${r.year})` : "";
+  const journal = r.journal ? `, ${r.journal}` : "";
+  const publisher = r.publisher ? `, ${r.publisher}` : "";
+  const authors = r.authors ? `${r.authors}.` : "";
+  const doi = r.doi ? ` DOI: ${r.doi}` : "";
+  const url = r.url ? (
+    <>
+      {" "}
+      <a
+        href={r.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-emerald-300 hover:text-emerald-200 hover:underline transition-colors break-all"
+      >
+        {r.url}
+      </a>
+    </>
+  ) : null;
 
   return (
-    <div className="group bg-neutral-900/50 rounded-xl p-6 border border-neutral-800 hover:border-neutral-700 transition-all hover:shadow-xl">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{typeIcons[resource.type] || "📎"}</span>
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${typeColors[resource.type]}`}
-          >
-            {resource.type}
-          </span>
-        </div>
-        {resource.url && (
-          <a
-            href={resource.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-neutral-400 hover:text-white transition-colors p-2 hover:bg-neutral-800 rounded-lg"
-            title="Open resource"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-          </a>
-        )}
-      </div>
-      <h4 className="text-lg font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors">
-        {resource.title}
-      </h4>
-      {resource.author && (
-        <p className="text-sm text-neutral-400 mb-3">by {resource.author}</p>
-      )}
-      {resource.description && (
-        <p className="text-neutral-300 leading-relaxed">
-          {resource.description}
-        </p>
-      )}
-    </div>
+    <span>
+      {authors} <span className="font-semibold">{r.title}</span>
+      {year}
+      {journal}
+      {publisher}
+      {doi}
+      {url}
+    </span>
   );
 }
