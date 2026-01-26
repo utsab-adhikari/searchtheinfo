@@ -58,7 +58,6 @@ async function fetchArticleMeta(slug: string): Promise<ArticleMeta | null> {
     const res = await fetch(
       `${baseUrl}/api/articles/v1/${encodeURIComponent(slug)}`,
       {
-        // Reasonable revalidation window for metadata
         next: { revalidate: 300 },
       },
     );

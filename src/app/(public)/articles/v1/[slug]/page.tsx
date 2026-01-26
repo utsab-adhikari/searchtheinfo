@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 
 // Client components for share and views
@@ -10,7 +8,7 @@ import CopyButton from "./copy-button";
 
 // Professional typography
 import { Inter } from "next/font/google";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Sun } from "lucide-react";
 const inter = Inter({ subsets: ["latin"] });
 
@@ -109,76 +107,39 @@ function findFirstImagePublicId(article: any): string | null {
   return null;
 }
 
-export default function ArticlePage() {
-  const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<ArticleDoc | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      if (!slug) {
-        setError("Missing article slug");
-        setArticle(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/articles/v1/${encodeURIComponent(slug)}`);
-        const data = (await res.json()) as {
-          success: boolean;
-          article?: ArticleDoc;
-          message?: string;
-        };
-
-        if (!res.ok || !data.success || !data.article) {
-          if (!cancelled) {
-            setError(data.message || "Article not found");
-            setArticle(null);
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setArticle(data.article);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError("Failed to load article");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-neutral-400">
-        Loading article...
-      </div>
-    );
+  if (!slug) {
+    notFound();
   }
 
-  if (error || !article) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-neutral-400">
-        {error || "Article not found"}
-      </div>
-    );
+  const res = await fetch(
+    `${getBaseUrl()}/api/articles/v1/${encodeURIComponent(slug)}`,
+    {
+      next: { revalidate: 300 },
+    },
+  );
+
+  if (!res.ok) {
+    notFound();
   }
+
+  const data = (await res.json()) as {
+    success: boolean;
+    article?: ArticleDoc;
+    message?: string;
+  };
+
+  if (!data.success || !data.article) {
+    notFound();
+  }
+
+  const article = data.article;
 
   const keywords = (article.keywords ?? []) as string[];
   const references = (article.references ?? []) as any[];
@@ -202,11 +163,7 @@ export default function ArticlePage() {
       ? article.category.slug || slugify(article.category.title || "")
       : null;
 
-  const baseForShare =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
-  const shareUrl = `${baseForShare}/articles/v1/${article.slug}`;
+  const shareUrl = `${getBaseUrl()}/articles/v1/${article.slug}`;
 
   // Build ToC similar to v2 (with subtopics)
   const toc:

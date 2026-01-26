@@ -1,8 +1,6 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Moon } from "lucide-react";
 
 // Client components
@@ -51,6 +49,16 @@ function getOptimizedCloudinaryUrl(
   const pid = publicId.replace(/^\/+/, "");
 
   return `https://res.cloudinary.com/${cloudName}/image/upload/${transformations}/${pid}`;
+}
+
+function getBaseUrl(): string {
+  let base =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+  if (base.endsWith("/")) base = base.slice(0, -1);
+  return base;
 }
 
 // Helper function to render text with embedded links
@@ -133,78 +141,39 @@ interface ArticleDoc {
 }
 
 // --------- Page ---------
-export default function ArticlePage() {
-  const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<ArticleDoc | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      if (!slug) {
-        setError("Missing article slug");
-        setArticle(null);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await fetch(`/api/articles/v1/${encodeURIComponent(slug)}`);
-        const data = (await res.json()) as {
-          success: boolean;
-          article?: ArticleDoc;
-          message?: string;
-        };
-
-        if (!res.ok || !data.success || !data.article) {
-          if (!cancelled) {
-            setError(data.message || "Article not found");
-            setArticle(null);
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setArticle(data.article);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError("Failed to load article");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading article...
-      </div>
-    );
+  if (!slug) {
+    notFound();
   }
 
-  if (error || !article) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        {error || "Article not found"}
-      </div>
-    );
+  const res = await fetch(
+    `${getBaseUrl()}/api/articles/v1/${encodeURIComponent(slug)}`,
+    {
+      next: { revalidate: 300 },
+    },
+  );
+
+  if (!res.ok) {
+    notFound();
   }
+
+  const data = (await res.json()) as {
+    success: boolean;
+    article?: ArticleDoc;
+    message?: string;
+  };
+
+  if (!data.success || !data.article) {
+    notFound();
+  }
+
+  const article = data.article;
 
   const refIndexMap = new Map<string, number>();
   (article.references || []).forEach((r: any, i: number) => {
@@ -222,6 +191,8 @@ export default function ArticlePage() {
     article.category && typeof article.category === "object"
       ? article.category.slug || slugify(article.category.title || "")
       : null;
+
+  const shareUrl = `${getBaseUrl()}/articles/v2/${article.slug}`;
 
   // Build a basic ToC from top-level sections only (clean, non-numbered)
   const toc: Array<{title: string; id: string; children?: Array<{title: string; id: string}>}> | false =
@@ -327,7 +298,7 @@ export default function ArticlePage() {
               </Link>
               <ShareMenu
                 title={article.title}
-                url={typeof window !== "undefined" ? `${window.location.origin}/articles/v2/${article.slug}` : ""}
+                url={shareUrl}
                 abstract={article.abstract || ""}
               />
               <ViewsCounter slug={article.slug} initialViews={article.views || 0} />
@@ -591,14 +562,6 @@ function BlockRenderer({
 
   switch (block.type) {
     case "text":
-      // Debug logging
-      console.log('Text block:', { 
-        hasLinks: !!block.links, 
-        linksLength: block.links?.length,
-        links: block.links,
-        text: block.text 
-      });
-      
       return (
         <p className="text-base md:text-lg leading-[1.85] text-gray-800 whitespace-pre-wrap font-serif">
           {block.links && Array.isArray(block.links) && block.links.length > 0 ? (
